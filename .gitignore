@@ -19,7 +19,6 @@ lib/
 lib64/
 *.so
 dev-docs/
-.agent/
 
 # Virtual environments
 .env
