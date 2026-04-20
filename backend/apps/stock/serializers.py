@@ -14,7 +14,7 @@ class StockCreateSerializer(serializers.Serializer):
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get("request")
-        if request and request.user.current_organization:
+        if request and hasattr(request.user, 'current_organization') and request.user.current_organization:
             fields["product"].queryset = Product.objects.filter(org=request.user.current_organization)
         return fields
 
