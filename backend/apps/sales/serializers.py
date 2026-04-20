@@ -1,0 +1,40 @@
+from decimal import Decimal
+
+from rest_framework import serializers
+
+from apps.products.models import Product
+
+from .models import SalesOrder, SalesOrderItem
+
+
+class SalesOrderItemWriteSerializer(serializers.Serializer):
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.none())
+    quantity = serializers.DecimalField(max_digits=12, decimal_places=3, min_value=Decimal("0.001"))
+    unit_price = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"))
+
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if request:
+            fields["product"].queryset = Product.objects.filter(user=request.user)
+        return fields
+
+
+class SalesOrderWriteSerializer(serializers.Serializer):
+    notes = serializers.CharField(required=False, allow_blank=True, default="")
+    items = SalesOrderItemWriteSerializer(many=True, min_length=1)
+
+
+class SalesOrderItemReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SalesOrderItem
+        fields = ["id", "product", "quantity", "unit_price"]
+
+
+class SalesOrderSerializer(serializers.ModelSerializer):
+    items = SalesOrderItemReadSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SalesOrder
+        fields = ["id", "status", "notes", "items", "created_at", "updated_at"]
+        read_only_fields = ["id", "status", "created_at", "updated_at"]
