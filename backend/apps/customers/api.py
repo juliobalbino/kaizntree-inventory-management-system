@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
-from .selectors import get_customer_by_id, get_customers_for_user
+from .selectors import get_customer_by_id, get_customers_for_org
 from .serializers import CustomerSerializer
 from .services import create_customer, delete_customer, update_customer
 
@@ -11,12 +11,12 @@ class CustomerListCreateView(ListCreateAPIView):
     serializer_class = CustomerSerializer
 
     def get_queryset(self):
-        return get_customers_for_user(self.request.user)
+        return get_customers_for_org(self.request.user.current_organization)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        customer = create_customer(user=request.user, data=serializer.validated_data)
+        customer = create_customer(org=request.user.current_organization, data=serializer.validated_data)
         return Response(CustomerSerializer(customer).data, status=status.HTTP_201_CREATED)
 
 
@@ -25,7 +25,7 @@ class CustomerDetailView(RetrieveUpdateDestroyAPIView):
     http_method_names = ["get", "patch", "delete"]
 
     def get_object(self):
-        return get_customer_by_id(self.request.user, self.kwargs["pk"])
+        return get_customer_by_id(self.request.user.current_organization, self.kwargs["pk"])
 
     def update(self, request, *args, **kwargs):
         customer = self.get_object()

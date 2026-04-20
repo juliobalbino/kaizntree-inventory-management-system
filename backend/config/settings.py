@@ -18,11 +18,12 @@ INSTALLED_APPS = [
     "corsheaders",
     "common",
     "apps.users",
+    "apps.organizations",
     "apps.products",
     "apps.stock",
-    "apps.purchases",
     "apps.suppliers",
     "apps.customers",
+    "apps.purchases",
     "apps.sales",
     "apps.financial",
 ]
@@ -83,6 +84,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
+        "common.permissions.HasActiveOrganization",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,

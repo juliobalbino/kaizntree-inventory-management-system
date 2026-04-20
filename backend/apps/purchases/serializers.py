@@ -16,8 +16,8 @@ class PurchaseOrderItemWriteSerializer(serializers.Serializer):
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get("request")
-        if request:
-            fields["product"].queryset = Product.objects.filter(user=request.user)
+        if request and request.user.current_organization:
+            fields["product"].queryset = Product.objects.filter(org=request.user.current_organization)
         return fields
 
 
@@ -29,8 +29,8 @@ class PurchaseOrderWriteSerializer(serializers.Serializer):
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get("request")
-        if request:
-            fields["supplier"].queryset = Supplier.objects.filter(user=request.user)
+        if request and request.user.current_organization:
+            fields["supplier"].queryset = Supplier.objects.filter(org=request.user.current_organization)
         return fields
 
 
@@ -40,10 +40,18 @@ class PurchaseOrderItemReadSerializer(serializers.ModelSerializer):
         fields = ["id", "product", "quantity", "unit_cost"]
 
 
+class CreatedBySerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+
+
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     items = PurchaseOrderItemReadSerializer(many=True, read_only=True)
+    created_by = CreatedBySerializer(read_only=True)
 
     class Meta:
         model = PurchaseOrder
-        fields = ["id", "supplier", "status", "notes", "items", "created_at", "updated_at"]
-        read_only_fields = ["id", "status", "created_at", "updated_at"]
+        fields = ["id", "supplier", "created_by", "status", "notes", "items", "created_at", "updated_at"]
+        read_only_fields = ["id", "status", "created_by", "created_at", "updated_at"]

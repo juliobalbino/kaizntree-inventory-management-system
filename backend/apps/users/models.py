@@ -21,6 +21,13 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
+    current_organization = models.ForeignKey(
+        "organizations.Organization",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="active_users",
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

@@ -1,8 +1,8 @@
 from .models import Supplier
 
 
-def create_supplier(user, data: dict) -> Supplier:
-    return Supplier.objects.create(user=user, **data)
+def create_supplier(org, data: dict) -> Supplier:
+    return Supplier.objects.create(org=org, **data)
 
 
 def update_supplier(supplier: Supplier, data: dict) -> Supplier:

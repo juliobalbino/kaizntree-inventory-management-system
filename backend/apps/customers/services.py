@@ -1,8 +1,8 @@
 from .models import Customer
 
 
-def create_customer(user, data: dict) -> Customer:
-    return Customer.objects.create(user=user, **data)
+def create_customer(org, data: dict) -> Customer:
+    return Customer.objects.create(org=org, **data)
 
 
 def update_customer(customer: Customer, data: dict) -> Customer:

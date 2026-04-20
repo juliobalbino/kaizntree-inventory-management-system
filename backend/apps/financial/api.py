@@ -7,11 +7,11 @@ from .serializers import FinancialSummarySerializer, ProductFinancialSerializer
 
 class FinancialSummaryView(APIView):
     def get(self, request):
-        data = get_financial_summary(request.user)
+        data = get_financial_summary(request.user.current_organization)
         return Response(FinancialSummarySerializer(data).data)
 
 
 class ProductFinancialView(APIView):
     def get(self, request):
-        data = get_per_product_financials(request.user)
+        data = get_per_product_financials(request.user.current_organization)
         return Response(ProductFinancialSerializer(data, many=True).data)

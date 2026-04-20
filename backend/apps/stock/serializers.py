@@ -11,10 +11,12 @@ class StockCreateSerializer(serializers.Serializer):
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.none())
     quantity = serializers.DecimalField(max_digits=12, decimal_places=3, min_value=Decimal("0.001"))
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if "request" in self.context:
-            self.fields["product"].queryset = Product.objects.filter(user=self.context["request"].user)
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if request and request.user.current_organization:
+            fields["product"].queryset = Product.objects.filter(org=request.user.current_organization)
+        return fields
 
 
 class StockSerializer(serializers.ModelSerializer):

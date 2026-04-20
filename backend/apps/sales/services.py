@@ -6,10 +6,10 @@ from common.exceptions import BusinessRuleViolation
 from .models import SalesOrder, SalesOrderItem
 
 
-def create_sales_order(user, data: dict) -> SalesOrder:
+def create_sales_order(org, data: dict, user=None) -> SalesOrder:
     items_data = data.pop("items")
     with transaction.atomic():
-        order = SalesOrder.objects.create(user=user, **data)
+        order = SalesOrder.objects.create(org=org, created_by=user, **data)
         for item in items_data:
             SalesOrderItem.objects.create(order=order, **item)
     return order

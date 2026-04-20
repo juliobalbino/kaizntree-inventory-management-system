@@ -47,13 +47,13 @@ def _revenue_subquery():
     )
 
 
-def get_financial_summary(user) -> dict:
+def get_financial_summary(org) -> dict:
     cost_agg = (
-        PurchaseOrderItem.objects.filter(order__user=user, order__status="confirmed")
+        PurchaseOrderItem.objects.filter(order__org=org, order__status="confirmed")
         .aggregate(total=Sum(ExpressionWrapper(F("unit_cost") * F("quantity"), output_field=_DECIMAL_FIELD)))
     )
     revenue_agg = (
-        SalesOrderItem.objects.filter(order__user=user, order__status="confirmed")
+        SalesOrderItem.objects.filter(order__org=org, order__status="confirmed")
         .aggregate(total=Sum(ExpressionWrapper(F("unit_price") * F("quantity"), output_field=_DECIMAL_FIELD)))
     )
 
@@ -69,9 +69,9 @@ def get_financial_summary(user) -> dict:
     }
 
 
-def get_per_product_financials(user) -> list:
+def get_per_product_financials(org) -> list:
     products = (
-        Product.objects.filter(user=user)
+        Product.objects.filter(org=org)
         .annotate(total_cost=_cost_subquery(), total_revenue=_revenue_subquery())
         .order_by("name")
     )

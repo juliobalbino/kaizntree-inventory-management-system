@@ -18,11 +18,12 @@ class StockListCreateView(ListCreateAPIView):
         return StockSerializer
 
     def get_queryset(self):
+        org = self.request.user.current_organization
         product_id = self.request.query_params.get("product")
         if product_id:
-            product = get_product_by_id(self.request.user, product_id)
+            product = get_product_by_id(org, product_id)
             return get_stock_for_product(product)
-        return Stock.objects.filter(product__user=self.request.user).order_by("-created_at")
+        return Stock.objects.filter(product__org=org).order_by("-created_at")
 
     def create(self, request, *args, **kwargs):
         serializer = StockCreateSerializer(data=request.data, context={"request": request})
@@ -38,4 +39,6 @@ class StockDetailView(RetrieveAPIView):
     serializer_class = StockSerializer
 
     def get_object(self):
-        return get_object_or_404(Stock, id=self.kwargs["pk"], product__user=self.request.user)
+        return get_object_or_404(
+            Stock, id=self.kwargs["pk"], product__org=self.request.user.current_organization
+        )

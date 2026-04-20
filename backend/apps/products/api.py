@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
-from .selectors import get_product_by_id, get_products_for_user
+from .selectors import get_product_by_id, get_products_for_org
 from .serializers import ProductSerializer
 from .services import create_product, delete_product, update_product
 
@@ -11,12 +11,12 @@ class ProductListCreateView(ListCreateAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        return get_products_for_user(self.request.user)
+        return get_products_for_org(self.request.user.current_organization)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        product = create_product(user=request.user, data=serializer.validated_data)
+        product = create_product(org=request.user.current_organization, data=serializer.validated_data)
         return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
 
 
@@ -25,7 +25,7 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
     http_method_names = ["get", "patch", "delete"]
 
     def get_object(self):
-        return get_product_by_id(self.request.user, self.kwargs["pk"])
+        return get_product_by_id(self.request.user.current_organization, self.kwargs["pk"])
 
     def update(self, request, *args, **kwargs):
         product = self.get_object()

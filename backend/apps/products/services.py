@@ -4,9 +4,9 @@ from rest_framework.exceptions import ValidationError
 from .models import Product
 
 
-def create_product(user, data: dict) -> Product:
+def create_product(org, data: dict) -> Product:
     try:
-        return Product.objects.create(user=user, **data)
+        return Product.objects.create(org=org, **data)
     except IntegrityError:
         raise ValidationError({"sku": "A product with this SKU already exists."})
 

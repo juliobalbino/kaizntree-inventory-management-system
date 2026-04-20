@@ -3,7 +3,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .selectors import get_order_by_id, get_orders_for_user
+from .selectors import get_order_by_id, get_orders_for_org
 from .serializers import PurchaseOrderSerializer, PurchaseOrderWriteSerializer
 from .services import confirm_purchase_order, create_purchase_order
 
@@ -15,12 +15,16 @@ class PurchaseOrderListCreateView(ListCreateAPIView):
         return PurchaseOrderSerializer
 
     def get_queryset(self):
-        return get_orders_for_user(self.request.user)
+        return get_orders_for_org(self.request.user.current_organization)
 
     def create(self, request, *args, **kwargs):
         serializer = PurchaseOrderWriteSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        order = create_purchase_order(user=request.user, data=serializer.validated_data)
+        order = create_purchase_order(
+            org=request.user.current_organization,
+            data=serializer.validated_data,
+            user=request.user,
+        )
         return Response(PurchaseOrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
 
@@ -28,11 +32,11 @@ class PurchaseOrderDetailView(RetrieveAPIView):
     serializer_class = PurchaseOrderSerializer
 
     def get_object(self):
-        return get_order_by_id(self.request.user, self.kwargs["pk"])
+        return get_order_by_id(self.request.user.current_organization, self.kwargs["pk"])
 
 
 class ConfirmPurchaseOrderView(APIView):
     def post(self, request, pk):
-        order = get_order_by_id(request.user, pk)
+        order = get_order_by_id(request.user.current_organization, pk)
         updated = confirm_purchase_order(order)
         return Response(PurchaseOrderSerializer(updated).data)
