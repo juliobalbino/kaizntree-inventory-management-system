@@ -31,3 +31,11 @@ def get_membership_by_user_id(org, user_id):
         organization=org,
         user_id=user_id,
     )
+
+
+def get_all_organizations():
+    return Organization.objects.all().order_by("name")
+
+
+def get_organization_by_id_admin(org_id):
+    return get_object_or_404(Organization, id=org_id)

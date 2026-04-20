@@ -24,11 +24,27 @@ def create_organization(name: str, user) -> Organization:
     return org
 
 
+def create_organization_by_admin(name: str, owner_email: str) -> Organization:
+    owner = User.objects.get(email=owner_email, is_admin=False)
+    slug = _generate_slug(name)
+    with transaction.atomic():
+        org = Organization.objects.create(name=name, slug=slug)
+        OrganizationMembership.objects.create(user=owner, organization=org, role="owner")
+        if owner.current_organization_id is None:
+            owner.current_organization = org
+            owner.save(update_fields=["current_organization"])
+    return org
+
+
 def update_organization(org: Organization, data: dict) -> Organization:
     for field, value in data.items():
         setattr(org, field, value)
     org.save()
     return org
+
+
+def delete_organization(org: Organization) -> None:
+    org.delete()
 
 
 def add_member_to_organization(org: Organization, data: dict) -> OrganizationMembership:

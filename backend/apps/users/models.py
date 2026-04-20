@@ -21,6 +21,7 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
+    is_admin = models.BooleanField(default=False)
     current_organization = models.ForeignKey(
         "organizations.Organization",
         null=True,

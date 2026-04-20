@@ -38,3 +38,35 @@ class AddMemberSerializer(serializers.Serializer):
 
 class UpdateMemberRoleSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=["owner", "member"])
+
+
+class AdminCreateOrganizationSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    owner_email = serializers.EmailField()
+
+    def validate_owner_email(self, value):
+        if not User.objects.filter(email=value, is_admin=False).exists():
+            raise serializers.ValidationError("User not found or is an admin user.")
+        return value
+
+
+class AdminOrganizationSerializer(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = ["id", "name", "slug", "members", "created_at"]
+        read_only_fields = ["id", "slug", "created_at"]
+
+    def get_members(self, obj):
+        memberships = obj.memberships.select_related("user").all()
+        return [
+            {
+                "id": str(m.user.id),
+                "email": m.user.email,
+                "first_name": m.user.first_name,
+                "last_name": m.user.last_name,
+                "role": m.role,
+            }
+            for m in memberships
+        ]

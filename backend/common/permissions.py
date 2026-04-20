@@ -26,3 +26,14 @@ class IsOrganizationOwner(BasePermission):
         return OrganizationMembership.objects.filter(
             user=request.user, organization_id=org_id, role="owner"
         ).exists()
+
+
+class IsAdmin(BasePermission):
+    message = "Only admin users can perform this action."
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_admin
+        )

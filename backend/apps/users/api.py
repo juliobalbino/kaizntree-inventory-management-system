@@ -1,31 +1,22 @@
 from rest_framework import status
-from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.permissions import IsAdmin
+
 from apps.organizations.selectors import get_organization_by_id
 
+from .selectors import get_all_users, get_user_by_id
 from .serializers import (
+    AdminCreateUserSerializer,
+    AdminUpdateUserSerializer,
+    AdminUserListSerializer,
     ChangePasswordSerializer,
-    RegisterSerializer,
     UpdateProfileSerializer,
     UserSerializer,
 )
-
-
-class RegisterView(CreateAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = RegisterSerializer
-
-    def perform_create(self, serializer):
-        self.created_user = serializer.save()
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(UserSerializer(self.created_user).data, status=status.HTTP_201_CREATED)
+from .services import create_user, delete_user, update_user
 
 
 class MeView(APIView):
@@ -68,3 +59,37 @@ class ChangePasswordView(APIView):
         request.user.set_password(serializer.validated_data["new_password"])
         request.user.save(update_fields=["password"])
         return Response({"detail": "Password changed successfully."})
+
+
+class AdminUserListCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        users = get_all_users()
+        return Response(AdminUserListSerializer(users, many=True).data)
+
+    def post(self, request):
+        serializer = AdminCreateUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = create_user(**serializer.validated_data)
+        return Response(AdminUserListSerializer(user).data, status=status.HTTP_201_CREATED)
+
+
+class AdminUserDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request, pk):
+        user = get_user_by_id(pk)
+        return Response(AdminUserListSerializer(user).data)
+
+    def patch(self, request, pk):
+        user = get_user_by_id(pk)
+        serializer = AdminUpdateUserSerializer(data=request.data, context={"user_instance": user})
+        serializer.is_valid(raise_exception=True)
+        updated = update_user(user, serializer.validated_data)
+        return Response(AdminUserListSerializer(updated).data)
+
+    def delete(self, request, pk):
+        user = get_user_by_id(pk)
+        delete_user(user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
