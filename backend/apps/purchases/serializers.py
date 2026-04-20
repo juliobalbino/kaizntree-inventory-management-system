@@ -3,6 +3,7 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from apps.products.models import Product
+from apps.suppliers.models import Supplier
 
 from .models import PurchaseOrder, PurchaseOrderItem
 
@@ -21,8 +22,16 @@ class PurchaseOrderItemWriteSerializer(serializers.Serializer):
 
 
 class PurchaseOrderWriteSerializer(serializers.Serializer):
+    supplier = serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.none(), required=False, allow_null=True)
     notes = serializers.CharField(required=False, allow_blank=True, default="")
     items = PurchaseOrderItemWriteSerializer(many=True, min_length=1)
+
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if request:
+            fields["supplier"].queryset = Supplier.objects.filter(user=request.user)
+        return fields
 
 
 class PurchaseOrderItemReadSerializer(serializers.ModelSerializer):
@@ -36,5 +45,5 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PurchaseOrder
-        fields = ["id", "status", "notes", "items", "created_at", "updated_at"]
+        fields = ["id", "supplier", "status", "notes", "items", "created_at", "updated_at"]
         read_only_fields = ["id", "status", "created_at", "updated_at"]

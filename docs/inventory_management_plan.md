@@ -22,6 +22,12 @@ Build a functional inventory management application with a Django backend and a 
 - Authentication
 - Per-user data isolation
 
+### Additional Features
+- Supplier registration and management
+- Customer registration and management
+- Purchase orders linked to a supplier (optional)
+- Sales orders linked to a customer (optional)
+
 ---
 
 ## Architecture
@@ -51,9 +57,28 @@ Build a functional inventory management application with a Django backend and a 
 - product
 - quantity
 
+### Supplier
+- id
+- user
+- name
+- email (optional)
+- phone (optional)
+- address (optional)
+- notes (optional)
+
+### Customer
+- id
+- user
+- name
+- email (optional)
+- phone (optional)
+- address (optional)
+- notes (optional)
+
 ### PurchaseOrder
 - id
 - user
+- supplier (FK → Supplier, optional)
 - total_cost
 
 ### PurchaseOrderItem
@@ -64,6 +89,7 @@ Build a functional inventory management application with a Django backend and a 
 ### SalesOrder
 - id
 - user
+- customer (FK → Customer, optional)
 - total_revenue
 
 ### SalesOrderItem
@@ -93,12 +119,26 @@ Build a functional inventory management application with a Django backend and a 
 #### Stock
 - POST /stock (manual)
 
+#### Suppliers
+- GET /suppliers
+- POST /suppliers
+- GET /suppliers/:id
+- PATCH /suppliers/:id
+- DELETE /suppliers/:id
+
+#### Customers
+- GET /customers
+- POST /customers
+- GET /customers/:id
+- PATCH /customers/:id
+- DELETE /customers/:id
+
 #### Purchase Order
-- POST /purchase-orders
+- POST /purchase-orders (accepts optional supplier)
   - automatically creates stock
 
 #### Sales Order
-- POST /sales-orders
+- POST /sales-orders (accepts optional customer)
   - validates stock
   - decrements stock
 
@@ -126,11 +166,19 @@ Build a functional inventory management application with a Django backend and a 
 - List
 - Create
 
+#### Suppliers
+- List
+- Create / Edit / Delete
+
+#### Customers
+- List
+- Create / Edit / Delete
+
 #### Purchase
-- Create purchase order
+- Create purchase order (with optional supplier selector)
 
 #### Sales
-- Create sales order
+- Create sales order (with optional customer selector)
 
 #### Dashboard
 - Display:
@@ -147,3 +195,4 @@ Build a functional inventory management application with a Django backend and a 
   - purchase creation
   - sales creation
   - profit calculation
+  - supplier/customer data isolation
