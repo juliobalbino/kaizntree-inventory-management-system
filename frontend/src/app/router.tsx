@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { ProtectedRoute, RoleRoute } from '../components/layout/RouteGuards';
+import { LoginPage } from '../pages/login/LoginPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -12,7 +13,7 @@ const Placeholder = ({ title }: { title: string }) => (
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: <Placeholder title="Login" />,
+    element: <LoginPage />,
   },
   {
     path: '/',
