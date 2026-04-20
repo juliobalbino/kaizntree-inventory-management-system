@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "common",
     "apps.users",
     "apps.products",
+    "apps.stock",
 ]
 
 AUTH_USER_MODEL = "users.User"
