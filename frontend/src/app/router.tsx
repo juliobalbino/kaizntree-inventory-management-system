@@ -27,10 +27,13 @@ export const router = createBrowserRouter([
 
           { path: 'dashboard', element: <Placeholder title="Dashboard" /> },
           { path: 'products', element: <Placeholder title="Products" /> },
+          { path: 'products/:id', element: <Placeholder title="Product Detail" /> },
           { path: 'suppliers', element: <Placeholder title="Suppliers" /> },
           { path: 'customers', element: <Placeholder title="Customers" /> },
           { path: 'purchases', element: <Placeholder title="Purchases" /> },
+          { path: 'purchases/new', element: <Placeholder title="New Purchase Order" /> },
           { path: 'sales', element: <Placeholder title="Sales" /> },
+          { path: 'sales/new', element: <Placeholder title="New Sales Order" /> },
 
           {
             path: 'admin',
@@ -43,9 +46,12 @@ export const router = createBrowserRouter([
 
           { path: 'settings/profile', element: <Placeholder title="Profile" /> },
           {
-            path: 'settings/members',
+            path: 'settings',
             element: <RoleRoute allowedRoles={['owner']} />,
-            children: [{ index: true, element: <Placeholder title="Manage Members" /> }]
+            children: [
+              { path: 'members', element: <Placeholder title="Manage Members" /> },
+              { path: 'organization', element: <Placeholder title="Organization Settings" /> },
+            ],
           },
         ],
       },
