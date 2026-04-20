@@ -22,12 +22,6 @@ Build a functional inventory management application with a Django backend and a 
 - Authentication
 - Per-user data isolation
 
-### Additional Features
-- Supplier registration and management
-- Customer registration and management
-- Purchase orders linked to a supplier (optional)
-- Sales orders linked to a customer (optional)
-
 ---
 
 ## Architecture
