@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
@@ -9,9 +10,17 @@ from .services import create_product, delete_product, update_product
 
 class ProductListCreateView(ListCreateAPIView):
     serializer_class = ProductSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name", "sku"]
+    ordering_fields = ["name", "sku", "unit", "stock_total"]
+    ordering = ["name"]
 
     def get_queryset(self):
-        return get_products_for_org(self.request.user.organization)
+        qs = get_products_for_org(self.request.user.organization)
+        unit = self.request.query_params.get("unit")
+        if unit:
+            qs = qs.filter(unit=unit)
+        return qs
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

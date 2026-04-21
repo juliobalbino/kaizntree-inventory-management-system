@@ -17,6 +17,8 @@ class Product(BaseModel):
     description = models.TextField(blank=True, default="")
     sku = models.CharField(max_length=100)
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 
     class Meta:
         unique_together = ("org", "sku")

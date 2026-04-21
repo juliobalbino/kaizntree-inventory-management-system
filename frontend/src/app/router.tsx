@@ -7,6 +7,8 @@ import { AdminUsersPage } from '../features/admin/pages/AdminUsersPage';
 import { AdminOrganizationsPage } from '../features/admin/pages/AdminOrganizationsPage';
 import { MembersPage } from '../features/members/pages/MembersPage';
 import { OrganizationSettingsPage } from '../features/organizations/pages/OrganizationSettingsPage';
+import { ProductsPage } from '../features/products/pages/ProductsPage';
+import { ProductDetailPage } from '../features/products/pages/ProductDetailPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -31,8 +33,8 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/dashboard" replace /> },
 
           { path: 'dashboard', element: <Placeholder title="Dashboard" /> },
-          { path: 'products', element: <Placeholder title="Products" /> },
-          { path: 'products/:id', element: <Placeholder title="Product Detail" /> },
+          { path: 'products', element: <ProductsPage /> },
+          { path: 'products/:id', element: <ProductDetailPage /> },
           { path: 'suppliers', element: <Placeholder title="Suppliers" /> },
           { path: 'customers', element: <Placeholder title="Customers" /> },
           { path: 'purchases', element: <Placeholder title="Purchases" /> },

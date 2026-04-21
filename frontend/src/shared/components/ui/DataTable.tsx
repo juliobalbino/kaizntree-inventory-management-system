@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Card,
   Group,
@@ -18,6 +18,7 @@ export interface Column<T> {
   key: string;
   header: string;
   sortable?: boolean;
+  align?: 'left' | 'right' | 'center';
   render?: (item: T) => React.ReactNode;
 }
 
@@ -37,6 +38,10 @@ interface DataTableProps<T> {
   onSortChange?: (field: string, direction: 'asc' | 'desc') => void;
   emptyStateMessage?: string;
   totalPages: number;
+  /** Extra content rendered on the right side of the search bar (e.g. filters) */
+  rightToolbar?: React.ReactNode;
+  /** Called when a row is clicked */
+  onRowClick?: (item: T) => void;
 }
 
 export function DataTable<T extends { id: string | number }>({
@@ -55,13 +60,20 @@ export function DataTable<T extends { id: string | number }>({
   onSortChange,
   emptyStateMessage = 'No records found.',
   totalPages,
+  rightToolbar,
+  onRowClick,
 }: DataTableProps<T>) {
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
+  const onSearchRef = useRef(onSearch);
 
   useEffect(() => {
-    onSearch(debouncedSearch);
-  }, [debouncedSearch, onSearch]);
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  useEffect(() => {
+    onSearchRef.current(debouncedSearch);
+  }, [debouncedSearch]);
 
   const handleSort = (field: string) => {
     if (!onSortChange) return;
@@ -72,13 +84,13 @@ export function DataTable<T extends { id: string | number }>({
     }
   };
 
-  const Th = ({ children, reversed, sorted, onSort, sortable }: any) => {
+  const Th = ({ children, reversed, sorted, onSort, sortable, align }: any) => {
     const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
     return (
-      <Table.Th>
+      <Table.Th style={{ textAlign: align ?? 'left' }}>
         {sortable ? (
           <UnstyledButton onClick={onSort} style={{ width: '100%', padding: '8px 0' }}>
-            <Group justify="space-between" wrap="nowrap">
+            <Group justify={align === 'right' ? 'flex-end' : 'space-between'} wrap="nowrap">
               <Text fw={600} size="sm">{children}</Text>
               <Center>
                 <Icon size={14} stroke={1.5} />
@@ -103,8 +115,9 @@ export function DataTable<T extends { id: string | number }>({
             leftSection={<IconSearch size={16} />}
             value={searchValue}
             onChange={(e) => setSearchValue(e.currentTarget.value)}
-            style={{ width: 300 }}
+            style={{ width: 280 }}
           />
+          {rightToolbar && <Group gap="sm">{rightToolbar}</Group>}
         </Group>
       </Card.Section>
 
@@ -126,6 +139,7 @@ export function DataTable<T extends { id: string | number }>({
                     reversed={sortDirection === 'asc'}
                     onSort={() => handleSort(col.key)}
                     sortable={col.sortable}
+                    align={col.align}
                   >
                     {col.header}
                   </Th>
@@ -134,9 +148,13 @@ export function DataTable<T extends { id: string | number }>({
             </Table.Thead>
             <Table.Tbody>
               {data.map((item) => (
-                <Table.Tr key={item.id}>
+                <Table.Tr
+                  key={item.id}
+                  onClick={onRowClick ? () => onRowClick(item) : undefined}
+                  style={onRowClick ? { cursor: 'pointer' } : undefined}
+                >
                   {columns.map((col) => (
-                    <Table.Td key={`${item.id}-${col.key}`}>
+                    <Table.Td key={`${item.id}-${col.key}`} style={{ textAlign: col.align ?? 'left' }}>
                       {col.render ? col.render(item) : (item as any)[col.key]}
                     </Table.Td>
                   ))}

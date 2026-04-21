@@ -19,6 +19,10 @@ class StockCreateSerializer(serializers.Serializer):
         return fields
 
 
+class StockRemoveSerializer(serializers.Serializer):
+    quantity = serializers.DecimalField(max_digits=12, decimal_places=3, min_value=Decimal("0.001"))
+
+
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
