@@ -46,10 +46,12 @@ export function AdminOrganizationsPage() {
   const [deletingOrgId, setDeletingOrgId] = useState<string | null>(null);
 
   const userOptions =
-    users?.map((u) => ({
-      value: u.email,
-      label: `${u.first_name} ${u.last_name} (${u.email})`,
-    })) ?? [];
+    users
+      ?.filter((u) => !u.organizations || u.organizations.length === 0)
+      .map((u) => ({
+        value: u.email,
+        label: `${u.first_name} ${u.last_name} (${u.email})`,
+      })) ?? [];
 
   const createForm = useForm({
     initialValues: { name: '', owner_email: '' },
