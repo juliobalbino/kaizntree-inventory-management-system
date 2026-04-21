@@ -127,17 +127,17 @@ export function Navbar({ close }: { close: () => void }) {
                   <NavItem icon={IconBuilding} label="Organization" to="/settings/organization" active={isActive('/settings/organization')} onClick={close} />
                 </>
               )}
+
+              <SectionLabel mt="lg">Account</SectionLabel>
+              <NavItem
+                icon={IconSettings}
+                label="Profile"
+                to="/settings/profile"
+                active={isActive('/settings/profile')}
+                onClick={close}
+              />
             </>
           )}
-
-          <SectionLabel mt="lg">Account</SectionLabel>
-          <NavItem
-            icon={IconSettings}
-            label="Profile"
-            to="/settings/profile"
-            active={isActive('/settings/profile')}
-            onClick={close}
-          />
         </Stack>
       </ScrollArea>
 

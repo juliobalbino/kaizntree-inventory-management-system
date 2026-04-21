@@ -5,7 +5,6 @@ import {
   Modal,
   PasswordInput,
   Stack,
-  Table,
   Text,
   TextInput,
 } from '@mantine/core';
@@ -13,6 +12,7 @@ import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { PageHeader } from '../../../shared/components/ui/PageHeader';
 import { EmptyState } from '../../../shared/components/ui/EmptyState';
+import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
 import {
   useAdminUsers,
   useCreateAdminUser,
@@ -40,7 +40,6 @@ const editUserSchema = z.object({
 });
 
 export function AdminUsersPage() {
-  const { data: users, isLoading } = useAdminUsers();
   const createUser = useCreateAdminUser();
   const updateUser = useUpdateAdminUser();
   const deleteUser = useDeleteAdminUser();
@@ -48,6 +47,24 @@ export function AdminUsersPage() {
   const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure();
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState<string>('email');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const { data, isLoading } = useAdminUsers({
+    page,
+    page_size: pageSize,
+    search,
+    ordering: sortDirection === 'desc' ? `-${sortField}` : sortField,
+  });
+
+  const users = data?.results ?? [];
+  const totalPages = data?.count ? Math.ceil(data.count / pageSize) : 1;
+
+
 
   const createForm = useForm({
     initialValues: { email: '', password: '', first_name: '', last_name: '' },
@@ -105,56 +122,56 @@ export function AdminUsersPage() {
     });
   };
 
+  const columns: Column<AdminUser>[] = [
+    { key: 'email', header: 'Email', sortable: true },
+    { key: 'first_name', header: 'First Name', sortable: true },
+    { key: 'last_name', header: 'Last Name', sortable: true },
+    {
+      key: 'organizations',
+      header: 'Organizations',
+      render: (item) =>
+        item.organizations.length ? item.organizations.map((o) => o.name).join(', ') : '—',
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (item) => (
+        <Group gap="xs">
+          <Button size="xs" variant="subtle" onClick={() => handleEditClick(item)}>
+            Edit
+          </Button>
+          <Button
+            size="xs"
+            variant="subtle"
+            color="red"
+            onClick={() => setDeletingUserId(item.id)}
+          >
+            Delete
+          </Button>
+        </Group>
+      ),
+    },
+  ];
+
   return (
     <>
       <PageHeader title="Users" action={{ label: 'New User', onClick: openCreate }} />
 
-      {isLoading ? (
-        <Text c="dimmed">Loading...</Text>
-      ) : !users?.length ? (
-        <EmptyState message="No users found." />
-      ) : (
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Email</Table.Th>
-              <Table.Th>First Name</Table.Th>
-              <Table.Th>Last Name</Table.Th>
-              <Table.Th>Organizations</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {users.map((user) => (
-              <Table.Tr key={user.id}>
-                <Table.Td>{user.email}</Table.Td>
-                <Table.Td>{user.first_name}</Table.Td>
-                <Table.Td>{user.last_name}</Table.Td>
-                <Table.Td>
-                  {user.organizations.length
-                    ? user.organizations.map((o) => o.name).join(', ')
-                    : '—'}
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <Button size="xs" variant="subtle" onClick={() => handleEditClick(user)}>
-                      Edit
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      color="red"
-                      onClick={() => setDeletingUserId(user.id)}
-                    >
-                      Delete
-                    </Button>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      )}
+      <DataTable
+        data={users}
+        columns={columns}
+        isLoading={isLoading}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+        onSearch={(query) => { setSearch(query); setPage(1); }}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={(field, direction) => { setSortField(field); setSortDirection(direction); }}
+        totalPages={totalPages}
+        totalCount={data?.count ?? 0}
+      />
 
       <Modal opened={createOpened} onClose={closeCreate} title="New User">
         <form onSubmit={handleCreate}>

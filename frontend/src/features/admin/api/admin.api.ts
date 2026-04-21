@@ -1,4 +1,4 @@
-import { apiClient } from '../../../lib/api-client';
+import { apiClient, type PaginatedResponse } from '../../../lib/api-client';
 import type {
   AdminUser,
   AdminOrganization,
@@ -8,8 +8,14 @@ import type {
   UpdateAdminOrgPayload,
 } from '../model/types';
 
-export const fetchAdminUsers = (): Promise<AdminUser[]> =>
-  apiClient.get('/admin/users/').then((r) => r.data);
+export interface TableQueryParams {
+  page?: number;
+  search?: string;
+  ordering?: string;
+}
+
+export const fetchAdminUsers = (params?: TableQueryParams): Promise<PaginatedResponse<AdminUser>> =>
+  apiClient.get('/admin/users/', { params }).then((r) => r.data);
 
 export const createAdminUser = (payload: CreateAdminUserPayload): Promise<AdminUser> =>
   apiClient.post('/admin/users/', payload).then((r) => r.data);
@@ -20,8 +26,8 @@ export const updateAdminUser = (id: number, payload: UpdateAdminUserPayload): Pr
 export const deleteAdminUser = (id: number): Promise<void> =>
   apiClient.delete(`/admin/users/${id}/`).then(() => undefined);
 
-export const fetchAdminOrgs = (): Promise<AdminOrganization[]> =>
-  apiClient.get('/admin/organizations/').then((r) => r.data);
+export const fetchAdminOrgs = (params?: TableQueryParams): Promise<PaginatedResponse<AdminOrganization>> =>
+  apiClient.get('/admin/organizations/', { params }).then((r) => r.data);
 
 export const createAdminOrg = (payload: CreateAdminOrgPayload): Promise<AdminOrganization> =>
   apiClient.post('/admin/organizations/', payload).then((r) => r.data);

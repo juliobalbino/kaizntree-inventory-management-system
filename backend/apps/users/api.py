@@ -1,4 +1,5 @@
-from rest_framework import status
+from rest_framework import generics, status
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -55,14 +56,18 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Password changed successfully."})
 
 
-class AdminUserListCreateView(APIView):
+class AdminUserListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsAdmin]
+    serializer_class = AdminUserListSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["email", "first_name", "last_name", "organization__name"]
+    ordering_fields = ["email", "first_name", "last_name", "id"]
+    ordering = ["email"]
 
-    def get(self, request):
-        users = get_all_users()
-        return Response(AdminUserListSerializer(users, many=True).data)
+    def get_queryset(self):
+        return get_all_users()
 
-    def post(self, request):
+    def create(self, request, *args, **kwargs):
         serializer = AdminCreateUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = create_user(**serializer.validated_data)

@@ -17,10 +17,12 @@ import type {
   UpdateAdminOrgPayload,
 } from '../model/types';
 
-export function useAdminUsers() {
+import type { TableQueryParams } from '../api/admin.api';
+
+export function useAdminUsers(params: TableQueryParams = {}) {
   return useQuery({
-    queryKey: ['admin', 'users'],
-    queryFn: fetchAdminUsers,
+    queryKey: ['admin', 'users', params],
+    queryFn: () => fetchAdminUsers(params),
   });
 }
 
@@ -67,10 +69,10 @@ export function useDeleteAdminUser() {
   });
 }
 
-export function useAdminOrgs() {
+export function useAdminOrgs(params: TableQueryParams = {}) {
   return useQuery({
-    queryKey: ['admin', 'organizations'],
-    queryFn: fetchAdminOrgs,
+    queryKey: ['admin', 'organizations', params],
+    queryFn: () => fetchAdminOrgs(params),
   });
 }
 

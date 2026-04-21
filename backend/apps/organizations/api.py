@@ -1,4 +1,5 @@
-from rest_framework import status
+from rest_framework import generics, status
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -33,12 +34,16 @@ from .services import (
 )
 
 
-class OrganizationListView(APIView):
+class OrganizationListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = OrganizationSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name", "slug"]
+    ordering_fields = ["name", "slug", "created_at"]
+    ordering = ["name"]
 
-    def get(self, request):
-        orgs = get_organizations_for_user(request.user)
-        return Response(OrganizationSerializer(orgs, many=True).data)
+    def get_queryset(self):
+        return get_organizations_for_user(self.request.user)
 
 
 class OrganizationDetailView(APIView):
@@ -100,14 +105,24 @@ class MemberDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AdminOrganizationListCreateView(APIView):
+class AdminOrganizationListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsAdmin]
+    serializer_class = AdminOrganizationSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = [
+        "name",
+        "slug",
+        "users__first_name",
+        "users__last_name",
+        "users__email",
+    ]
+    ordering_fields = ["name", "slug"]
+    ordering = ["name"]
 
-    def get(self, request):
-        orgs = get_all_organizations()
-        return Response(AdminOrganizationSerializer(orgs, many=True).data)
+    def get_queryset(self):
+        return get_all_organizations().distinct()
 
-    def post(self, request):
+    def create(self, request, *args, **kwargs):
         serializer = AdminCreateOrganizationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         org = create_organization_by_admin(

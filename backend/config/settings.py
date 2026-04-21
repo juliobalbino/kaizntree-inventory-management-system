@@ -87,7 +87,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
         "common.permissions.HasActiveOrganization",
     ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "common.pagination.DynamicPageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }

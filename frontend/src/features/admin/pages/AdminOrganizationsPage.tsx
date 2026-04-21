@@ -6,7 +6,6 @@ import {
   Modal,
   Select,
   Stack,
-  Table,
   Text,
   TextInput,
 } from '@mantine/core';
@@ -14,6 +13,7 @@ import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { PageHeader } from '../../../shared/components/ui/PageHeader';
 import { EmptyState } from '../../../shared/components/ui/EmptyState';
+import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
 import {
   useAdminOrgs,
   useCreateAdminOrg,
@@ -35,8 +35,6 @@ const editOrgSchema = z.object({
 });
 
 export function AdminOrganizationsPage() {
-  const { data: orgs, isLoading } = useAdminOrgs();
-  const { data: users } = useAdminUsers();
   const createOrg = useCreateAdminOrg();
   const updateOrg = useUpdateAdminOrg();
   const deleteOrg = useDeleteAdminOrg();
@@ -44,6 +42,25 @@ export function AdminOrganizationsPage() {
   const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure();
   const [editingOrg, setEditingOrg] = useState<AdminOrganization | null>(null);
   const [deletingOrgId, setDeletingOrgId] = useState<string | null>(null);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const { data, isLoading } = useAdminOrgs({
+    page,
+    page_size: pageSize,
+    search,
+    ordering: sortDirection === 'desc' ? `-${sortField}` : sortField,
+  });
+  
+  const orgs = data?.results ?? [];
+  const totalPages = data?.count ? Math.ceil(data.count / pageSize) : 1;
+
+  const { data: usersData } = useAdminUsers();
+  const users = usersData?.results ?? [];
 
   const userOptions =
     users
@@ -112,54 +129,64 @@ export function AdminOrganizationsPage() {
     return owner ? `${owner.first_name} ${owner.last_name}` : '—';
   };
 
+  const columns: Column<AdminOrganization>[] = [
+    { key: 'name', header: 'Name', sortable: true },
+    { 
+      key: 'slug', 
+      header: 'Slug', 
+      sortable: true,
+      render: (item) => <Badge variant="light" color="gray">{item.slug}</Badge>
+    },
+    {
+      key: 'owner',
+      header: 'Owner',
+      render: (item) => getOwner(item)
+    },
+    {
+      key: 'members',
+      header: 'Members',
+      render: (item) => item.members.length
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (item) => (
+        <Group gap="xs">
+          <Button size="xs" variant="subtle" onClick={() => handleEditClick(item)}>
+            Edit
+          </Button>
+          <Button
+            size="xs"
+            variant="subtle"
+            color="red"
+            onClick={() => setDeletingOrgId(item.id)}
+          >
+            Delete
+          </Button>
+        </Group>
+      )
+    }
+  ];
+
   return (
     <>
       <PageHeader title="Organizations" action={{ label: 'New Organization', onClick: openCreate }} />
 
-      {isLoading ? (
-        <Text c="dimmed">Loading...</Text>
-      ) : !orgs?.length ? (
-        <EmptyState message="No organizations found." />
-      ) : (
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Slug</Table.Th>
-              <Table.Th>Owner</Table.Th>
-              <Table.Th>Members</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {orgs.map((org) => (
-              <Table.Tr key={org.id}>
-                <Table.Td>{org.name}</Table.Td>
-                <Table.Td>
-                  <Badge variant="light" color="gray">{org.slug}</Badge>
-                </Table.Td>
-                <Table.Td>{getOwner(org)}</Table.Td>
-                <Table.Td>{org.members.length}</Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <Button size="xs" variant="subtle" onClick={() => handleEditClick(org)}>
-                      Edit
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      color="red"
-                      onClick={() => setDeletingOrgId(org.id)}
-                    >
-                      Delete
-                    </Button>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      )}
+      <DataTable
+        data={orgs}
+        columns={columns}
+        isLoading={isLoading}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+        onSearch={(query) => { setSearch(query); setPage(1); }}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={(field, direction) => { setSortField(field); setSortDirection(direction); }}
+        totalPages={totalPages}
+        totalCount={data?.count ?? 0}
+      />
 
       <Modal opened={createOpened} onClose={closeCreate} title="New Organization">
         <form onSubmit={handleCreate}>
