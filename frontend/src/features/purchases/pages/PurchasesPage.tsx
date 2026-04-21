@@ -3,34 +3,163 @@ import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   Button,
-  Card,
-  Center,
   Group,
-  Pagination,
-  Table,
+  Select,
   Text,
+  TextInput,
 } from '@mantine/core';
 import { PageHeader } from '../../../shared/components/ui/PageHeader';
+import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
 import { usePurchaseOrders } from '../hooks/usePurchases';
 import { formatDate } from '../../../lib/utils';
 import type { PurchaseOrder } from '../model/types';
 
-const PAGE_SIZE = 20;
-
 const STATUS_COLORS: Record<string, string> = {
   pending: 'yellow',
   confirmed: 'green',
+  cancelled: 'red',
 };
 
 export function PurchasesPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [status, setStatus] = useState<string | null>(null);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
-  const { data: paginated, isLoading } = usePurchaseOrders({ page, page_size: PAGE_SIZE });
+  const { data: paginated, isLoading } = usePurchaseOrders({
+    page,
+    page_size: pageSize,
+    search: search || undefined,
+    ordering: sortDirection === 'desc' ? `-${sortField}` : sortField,
+    status: status || undefined,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
+  });
+  
+  // ... rest of the columns definition ...
 
-  const orders = paginated?.results ?? [];
-  const totalCount = paginated?.count ?? 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const columns: Column<PurchaseOrder>[] = [
+    {
+      key: 'id',
+      header: 'Order #',
+      sortable: true,
+      render: (order) => (
+        <Text size="sm" ff="monospace" c="dimmed">
+          #{order.id.slice(0, 8).toUpperCase()}
+        </Text>
+      ),
+    },
+    {
+      key: 'supplier__name',
+      header: 'Supplier',
+      sortable: true,
+      render: (order) => (
+        <Text size="sm">{order.supplier?.name ?? '—'}</Text>
+      ),
+    },
+    {
+      key: 'items',
+      header: 'Items',
+      render: (order) => (
+        <Text size="sm">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</Text>
+      ),
+    },
+    {
+      key: 'created_by',
+      header: 'Created by',
+      render: (order) => (
+        <Text size="sm" c="dimmed">
+          {order.created_by
+            ? (order.created_by.first_name || order.created_by.email)
+            : '—'}
+        </Text>
+      ),
+    },
+    {
+      key: 'created_at',
+      header: 'Date',
+      sortable: true,
+      render: (order) => (
+        <Text size="sm">{formatDate(order.created_at)}</Text>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      sortable: true,
+      render: (order) => (
+        <Badge
+          color={STATUS_COLORS[order.status] ?? 'gray'}
+          variant="light"
+          size="sm"
+        >
+          {order.status}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      render: (order) => (
+        <Group gap="xs" justify="flex-end">
+          <Button
+            size="xs"
+            variant="default"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/purchases/${order.id}`);
+            }}
+          >
+            View
+          </Button>
+        </Group>
+      ),
+    },
+  ];
+
+  const filters = (
+    <Group gap="xs">
+      <Select
+        placeholder="Status"
+        data={[
+          { value: 'pending', label: 'Pending' },
+          { value: 'confirmed', label: 'Confirmed' },
+          { value: 'cancelled', label: 'Cancelled' },
+        ]}
+        value={status}
+        onChange={(val) => { setStatus(val); setPage(1); }}
+        clearable
+        size="xs"
+        style={{ width: 120 }}
+      />
+      <Group gap={4}>
+        <Text size="xs" c="dimmed">From:</Text>
+        <TextInput
+          type="date"
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.currentTarget.value); setPage(1); }}
+          size="xs"
+          style={{ width: 130 }}
+        />
+      </Group>
+      <Group gap={4}>
+        <Text size="xs" c="dimmed">To:</Text>
+        <TextInput
+          type="date"
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.currentTarget.value); setPage(1); }}
+          size="xs"
+          style={{ width: 130 }}
+        />
+      </Group>
+    </Group>
+  );
 
   return (
     <>
@@ -40,84 +169,24 @@ export function PurchasesPage() {
         action={{ label: 'New Order', onClick: () => navigate('/purchases/new') }}
       />
 
-      <Card shadow="sm" radius="md" withBorder padding={0}>
-        <Card.Section>
-          {isLoading ? (
-            <Center p="xl"><Text c="dimmed">Loading...</Text></Center>
-          ) : orders.length === 0 ? (
-            <Center p="xl"><Text c="dimmed">No purchase orders yet.</Text></Center>
-          ) : (
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Order #</Table.Th>
-                  <Table.Th>Supplier</Table.Th>
-                  <Table.Th>Items</Table.Th>
-                  <Table.Th>Created by</Table.Th>
-                  <Table.Th>Date</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                  <Table.Th style={{ width: 140 }} />
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {orders.map((order: PurchaseOrder) => (
-                  <Table.Tr key={order.id}>
-                    <Table.Td>
-                      <Text size="sm" ff="monospace" c="dimmed">
-                        #{order.id.slice(0, 8)}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">{order.supplier?.name ?? '—'}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed">
-                        {order.created_by
-                          ? `${order.created_by.first_name || order.created_by.email}`
-                          : '—'}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">{formatDate(order.created_at)}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Badge
-                        color={STATUS_COLORS[order.status] ?? 'gray'}
-                        variant="light"
-                        size="sm"
-                      >
-                        {order.status}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs" justify="flex-end">
-                        <Button
-                          size="xs"
-                          variant="default"
-                          onClick={() => navigate(`/purchases/${order.id}`)}
-                        >
-                          View
-                        </Button>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
-        </Card.Section>
-
-        {totalPages > 1 && (
-          <Card.Section withBorder p="sm">
-            <Group justify="flex-end">
-              <Pagination total={totalPages} value={page} onChange={setPage} size="sm" />
-            </Group>
-          </Card.Section>
-        )}
-      </Card>
+      <DataTable
+        data={paginated?.results ?? []}
+        columns={columns}
+        totalCount={paginated?.count ?? 0}
+        isLoading={isLoading}
+        page={page}
+        pageSize={pageSize}
+        totalPages={Math.ceil((paginated?.count ?? 0) / pageSize)}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+        onSearch={(s) => { setSearch(s); setPage(1); }}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={(field, dir) => { setSortField(field); setSortDirection(dir); }}
+        searchPlaceholder="Order #, Supplier, Creator..."
+        rightToolbar={filters}
+        onRowClick={(order) => navigate(`/purchases/${order.id}`)}
+      />
     </>
   );
 }

@@ -4,6 +4,11 @@ import type { PurchaseOrder, PurchaseOrderPayload } from '../model/types';
 export interface PurchaseQueryParams {
   page?: number;
   page_size?: number;
+  search?: string;
+  ordering?: string;
+  status?: string;
+  date_from?: string;
+  date_to?: string;
 }
 
 export const fetchPurchaseOrders = (params?: PurchaseQueryParams): Promise<PaginatedResponse<PurchaseOrder>> =>

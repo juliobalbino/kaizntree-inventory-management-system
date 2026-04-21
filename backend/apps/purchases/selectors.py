@@ -4,7 +4,7 @@ from .models import PurchaseOrder
 
 
 def get_orders_for_org(org):
-    return PurchaseOrder.objects.filter(org=org).order_by("-created_at")
+    return PurchaseOrder.objects.filter(org=org)
 
 
 def get_order_by_id(org, order_id):
