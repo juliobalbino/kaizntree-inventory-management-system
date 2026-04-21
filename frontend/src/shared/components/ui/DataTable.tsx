@@ -38,11 +38,8 @@ interface DataTableProps<T> {
   onSortChange?: (field: string, direction: 'asc' | 'desc') => void;
   emptyStateMessage?: string;
   totalPages: number;
-  /** Extra content rendered on the right side of the search bar (e.g. filters) */
   rightToolbar?: React.ReactNode;
-  /** Hide the search input (toolbar section still shown if rightToolbar is provided) */
   hideSearch?: boolean;
-  /** Called when a row is clicked */
   onRowClick?: (item: T) => void;
 }
 

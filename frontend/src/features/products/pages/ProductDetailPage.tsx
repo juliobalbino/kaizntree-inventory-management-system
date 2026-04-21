@@ -186,6 +186,13 @@ export function ProductDetailPage() {
             </Anchor>
           );
         }
+        if (entry.source === 'sales_order') {
+          return (
+            <Anchor size="sm" ff="monospace" onClick={() => navigate(`/sales/${entry.reference}`)}>
+              {short}
+            </Anchor>
+          );
+        }
         return <Text size="sm" ff="monospace" c="dimmed">{short}</Text>;
       },
     },

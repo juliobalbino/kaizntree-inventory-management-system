@@ -8,6 +8,7 @@ class SalesOrder(BaseModel):
     STATUS_CHOICES = [
         ("pending", "Pending"),
         ("confirmed", "Confirmed"),
+        ("cancelled", "Cancelled"),
     ]
 
     org = models.ForeignKey("organizations.Organization", on_delete=models.CASCADE, related_name="sales_orders")

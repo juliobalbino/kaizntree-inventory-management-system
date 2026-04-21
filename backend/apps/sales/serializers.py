@@ -34,14 +34,23 @@ class SalesOrderWriteSerializer(serializers.Serializer):
         return fields
 
 
+class ProductMinimalSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    sku = serializers.CharField()
+    unit = serializers.CharField()
+
+
 class SalesOrderItemReadSerializer(serializers.ModelSerializer):
+    product = ProductMinimalSerializer(read_only=True)
+
     class Meta:
         model = SalesOrderItem
         fields = ["id", "product", "quantity", "unit_price"]
 
 
 class CreatedBySerializer(serializers.Serializer):
-    id = serializers.UUIDField()
+    id = serializers.IntegerField()
     email = serializers.EmailField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
@@ -50,6 +59,12 @@ class CreatedBySerializer(serializers.Serializer):
 class SalesOrderSerializer(serializers.ModelSerializer):
     items = SalesOrderItemReadSerializer(many=True, read_only=True)
     created_by = CreatedBySerializer(read_only=True)
+    customer = serializers.SerializerMethodField()
+
+    def get_customer(self, obj):
+        if obj.customer:
+            return {"id": str(obj.customer.id), "name": obj.customer.name}
+        return None
 
     class Meta:
         model = SalesOrder

@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Anchor,
-  Badge,
   Breadcrumbs,
   Button,
   Card,
@@ -12,11 +10,13 @@ import {
   NumberInput,
   Select,
   Stack,
-  Table,
   Text,
   Textarea,
   Title,
 } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { zodResolver } from 'mantine-form-zod-resolver';
+import { z } from 'zod';
 import { IconPlus, IconTrash, IconCheck } from '@tabler/icons-react';
 import { useCreatePurchaseOrder, useConfirmPurchaseOrder } from '../hooks/usePurchases';
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
@@ -25,33 +25,35 @@ import { formatCurrency } from '../../../lib/utils';
 import type { PurchaseOrder } from '../model/types';
 import { PurchaseOrderSummary } from '../components/PurchaseOrderSummary';
 
-interface ItemRow {
-  product: string;
-  quantity: number | string;
-  unit_cost: number | string;
-}
+const purchaseSchema = z.object({
+  supplier: z.string().nullable(),
+  notes: z.string(),
+  items: z.array(z.object({
+    product: z.string().min(1, 'Required'),
+    quantity: z.number().positive('Must be > 0'),
+    unit_cost: z.number().positive('Must be > 0'),
+  })).min(1, 'Add at least one item'),
+});
 
-const emptyItem = (): ItemRow => ({ product: '', quantity: '', unit_cost: '' });
-
-function itemTotal(item: ItemRow): number {
-  const qty = Number(item.quantity);
-  const cost = Number(item.unit_cost);
-  return isNaN(qty) || isNaN(cost) ? 0 : qty * cost;
-}
+type PurchaseValues = z.infer<typeof purchaseSchema>;
 
 export function CreatePurchasePage() {
   const navigate = useNavigate();
-
-  const [supplier, setSupplier] = useState<string | null>(null);
-  const [notes, setNotes] = useState('');
-  const [items, setItems] = useState<ItemRow[]>([emptyItem()]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [createdOrder, setCreatedOrder] = useState<PurchaseOrder | null>(null);
 
   const { data: suppliersData } = useSuppliers({ page_size: 100 });
   const { data: productsData } = useProducts({ page_size: 100 });
   const createOrder = useCreatePurchaseOrder();
   const confirmOrder = useConfirmPurchaseOrder();
+
+  const form = useForm<PurchaseValues>({
+    initialValues: {
+      supplier: null,
+      notes: '',
+      items: [{ product: '', quantity: 1, unit_cost: 0.01 }],
+    },
+    validate: zodResolver(purchaseSchema),
+  });
 
   const supplierOptions = (suppliersData?.results ?? []).map((s) => ({
     value: s.id,
@@ -64,53 +66,24 @@ export function CreatePurchasePage() {
   }));
 
   const handleProductChange = (index: number, productId: string | null) => {
-    const updated = [...items];
-    updated[index] = { ...updated[index], product: productId ?? '' };
+    form.setFieldValue(`items.${index}.product`, productId ?? '');
     if (productId) {
       const product = productsData?.results.find((p) => p.id === productId);
       if (product?.unit_cost) {
-        updated[index].unit_cost = Number(product.unit_cost);
+        form.setFieldValue(`items.${index}.unit_cost`, Number(product.unit_cost));
       }
     }
-    setItems(updated);
   };
 
-  const handleFieldChange = (index: number, field: keyof ItemRow, value: number | string) => {
-    const updated = [...items];
-    updated[index] = { ...updated[index], [field]: value };
-    setItems(updated);
-  };
-
-  const addItem = () => setItems((prev) => [...prev, emptyItem()]);
-
-  const removeItem = (index: number) => {
-    if (items.length === 1) return;
-    setItems((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    items.forEach((item, i) => {
-      if (!item.product) newErrors[`${i}.product`] = 'Select a product';
-      const qty = Number(item.quantity);
-      if (!item.quantity || isNaN(qty) || qty <= 0) newErrors[`${i}.quantity`] = 'Must be > 0';
-      const cost = Number(item.unit_cost);
-      if (!item.unit_cost || isNaN(cost) || cost <= 0) newErrors[`${i}.unit_cost`] = 'Must be > 0';
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!validate()) return;
+  const handleSubmit = (values: PurchaseValues) => {
     createOrder.mutate(
       {
-        supplier: supplier || null,
-        notes,
-        items: items.map((item) => ({
+        supplier: values.supplier,
+        notes: values.notes,
+        items: values.items.map((item) => ({
           product: item.product,
-          quantity: Number(item.quantity),
-          unit_cost: Number(item.unit_cost),
+          quantity: item.quantity,
+          unit_cost: item.unit_cost,
         })),
       },
       {
@@ -126,7 +99,8 @@ export function CreatePurchasePage() {
     });
   };
 
-  const totalCost = items.reduce((sum, item) => sum + itemTotal(item), 0);
+  const itemTotal = (item: PurchaseValues['items'][0]) => item.quantity * item.unit_cost;
+  const totalCost = form.values.items.reduce((sum, item) => sum + itemTotal(item), 0);
 
   if (createdOrder) {
     return (
@@ -155,113 +129,108 @@ export function CreatePurchasePage() {
   }
 
   return (
-    <Stack gap="lg" maw={780}>
-      <Breadcrumbs>
-        <Anchor size="sm" onClick={() => navigate('/purchases')}>Purchase Orders</Anchor>
-        <Text size="sm" c="dimmed">New Order</Text>
-      </Breadcrumbs>
+    <form onSubmit={form.onSubmit(handleSubmit)}>
+      <Stack gap="lg" maw={780}>
+        <Breadcrumbs>
+          <Anchor size="sm" onClick={() => navigate('/purchases')}>Purchase Orders</Anchor>
+          <Text size="sm" c="dimmed">New Order</Text>
+        </Breadcrumbs>
 
-      <Title order={2} style={{ fontSize: 22, fontWeight: 600 }}>New Purchase Order</Title>
+        <Title order={2} style={{ fontSize: 22, fontWeight: 600 }}>New Purchase Order</Title>
 
-      <Card withBorder radius="md" p="lg">
-        <Stack gap="md">
-          <Title order={5}>Order Details</Title>
-          <Divider />
-          <Select
-            label="Supplier"
-            placeholder="Select a supplier (optional)"
-            data={supplierOptions}
-            value={supplier}
-            onChange={setSupplier}
-            clearable
-            searchable
-          />
-          <Textarea
-            label="Notes"
-            placeholder="Internal notes for this order..."
-            autosize
-            minRows={2}
-            value={notes}
-            onChange={(e) => setNotes(e.currentTarget.value)}
-          />
-        </Stack>
-      </Card>
-
-      <Card withBorder radius="md" p="lg">
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Title order={5}>Items</Title>
-            <Text size="sm" c="dimmed">
-              Estimated total: <strong>{formatCurrency(totalCost)}</strong>
-            </Text>
-          </Group>
-          <Divider />
-
-          <Stack gap="xs">
-            {items.map((item, index) => (
-              <Group key={index} align="flex-start" wrap="nowrap" gap="sm">
-                <Select
-                  placeholder="Select product"
-                  data={productOptions}
-                  value={item.product || null}
-                  onChange={(val) => handleProductChange(index, val)}
-                  searchable
-                  style={{ flex: 2 }}
-                  error={errors[`${index}.product`]}
-                />
-                <NumberInput
-                  placeholder="Qty"
-                  min={0.001}
-                  decimalScale={3}
-                  value={item.quantity as number}
-                  onChange={(val) => handleFieldChange(index, 'quantity', val)}
-                  style={{ width: 100 }}
-                  error={errors[`${index}.quantity`]}
-                />
-                <NumberInput
-                  placeholder="Unit cost"
-                  leftSection="$"
-                  min={0.01}
-                  decimalScale={2}
-                  value={item.unit_cost as number}
-                  onChange={(val) => handleFieldChange(index, 'unit_cost', val)}
-                  style={{ width: 140 }}
-                  error={errors[`${index}.unit_cost`]}
-                />
-                <Button
-                  variant="subtle"
-                  color="red"
-                  size="sm"
-                  px="xs"
-                  mt={1}
-                  disabled={items.length === 1}
-                  onClick={() => removeItem(index)}
-                >
-                  <IconTrash size={16} />
-                </Button>
-              </Group>
-            ))}
+        <Card withBorder radius="md" p="lg">
+          <Stack gap="md">
+            <Title order={5}>Order Details</Title>
+            <Divider />
+            <Select
+              label="Supplier"
+              placeholder="Select a supplier (optional)"
+              data={supplierOptions}
+              searchable
+              clearable
+              {...form.getInputProps('supplier')}
+            />
+            <Textarea
+              label="Notes"
+              placeholder="Internal notes for this order..."
+              autosize
+              minRows={2}
+              {...form.getInputProps('notes')}
+            />
           </Stack>
+        </Card>
 
-          <Button
-            variant="subtle"
-            leftSection={<IconPlus size={14} />}
-            onClick={addItem}
-            style={{ alignSelf: 'flex-start' }}
-          >
-            Add Item
+        <Card withBorder radius="md" p="lg">
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Title order={5}>Items</Title>
+              <Text size="sm" c="dimmed">
+                Estimated total: <strong>{formatCurrency(totalCost)}</strong>
+              </Text>
+            </Group>
+            <Divider />
+
+            <Stack gap="xs">
+              {form.values.items.map((_, index) => (
+                <Group key={index} align="flex-start" wrap="nowrap" gap="sm">
+                  <Select
+                    placeholder="Select product"
+                    data={productOptions}
+                    searchable
+                    style={{ flex: 2 }}
+                    {...form.getInputProps(`items.${index}.product`)}
+                    onChange={(val) => handleProductChange(index, val)}
+                  />
+                  <NumberInput
+                    placeholder="Qty"
+                    min={0.001}
+                    decimalScale={3}
+                    style={{ width: 100 }}
+                    {...form.getInputProps(`items.${index}.quantity`)}
+                  />
+                  <NumberInput
+                    placeholder="Unit cost"
+                    leftSection="$"
+                    min={0.01}
+                    decimalScale={2}
+                    style={{ width: 140 }}
+                    {...form.getInputProps(`items.${index}.unit_cost`)}
+                  />
+                  <Button
+                    variant="subtle"
+                    color="red"
+                    size="sm"
+                    px="xs"
+                    mt={1}
+                    disabled={form.values.items.length === 1}
+                    onClick={() => form.removeListItem('items', index)}
+                  >
+                    <IconTrash size={16} />
+                  </Button>
+                </Group>
+              ))}
+            </Stack>
+
+            <Button
+              variant="subtle"
+              leftSection={<IconPlus size={14} />}
+              onClick={() => form.insertListItem('items', { product: '', quantity: 1, unit_cost: 0.01 })}
+              style={{ alignSelf: 'flex-start' }}
+            >
+              Add Item
+            </Button>
+          </Stack>
+        </Card>
+
+        <Group>
+          <Button variant="default" onClick={() => navigate('/purchases')}>
+            Cancel
           </Button>
-        </Stack>
-      </Card>
-
-      <Group>
-        <Button variant="default" onClick={() => navigate('/purchases')}>
-          Cancel
-        </Button>
-        <Button loading={createOrder.isPending} onClick={handleSubmit}>
-          Create Order
-        </Button>
-      </Group>
-    </Stack>
+          <Button type="submit" loading={createOrder.isPending}>
+            Create Order
+          </Button>
+        </Group>
+      </Stack>
+    </form>
   );
 }

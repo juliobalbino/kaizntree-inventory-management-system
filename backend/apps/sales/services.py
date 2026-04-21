@@ -6,6 +6,16 @@ from common.exceptions import BusinessRuleViolation
 from .models import SalesOrder, SalesOrderItem
 
 
+def cancel_sales_order(order: SalesOrder) -> SalesOrder:
+    if order.status == "confirmed":
+        raise BusinessRuleViolation("Cannot cancel a confirmed order.")
+    if order.status == "cancelled":
+        raise BusinessRuleViolation("Order is already cancelled.")
+    order.status = "cancelled"
+    order.save(update_fields=["status", "updated_at"])
+    return order
+
+
 def create_sales_order(org, data: dict, user=None) -> SalesOrder:
     items_data = data.pop("items")
     with transaction.atomic():
