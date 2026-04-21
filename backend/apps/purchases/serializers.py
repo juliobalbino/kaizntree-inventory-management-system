@@ -16,7 +16,7 @@ class PurchaseOrderItemWriteSerializer(serializers.Serializer):
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get("request")
-        if request and hasattr(request.user, 'organization') and request.user.organization:
+        if request and hasattr(request.user, "organization") and request.user.organization:
             fields["product"].queryset = Product.objects.filter(org=request.user.organization)
         return fields
 
@@ -29,19 +29,28 @@ class PurchaseOrderWriteSerializer(serializers.Serializer):
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get("request")
-        if request and hasattr(request.user, 'organization') and request.user.organization:
+        if request and hasattr(request.user, "organization") and request.user.organization:
             fields["supplier"].queryset = Supplier.objects.filter(org=request.user.organization)
         return fields
 
 
+class ProductMinimalSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    sku = serializers.CharField()
+    unit = serializers.CharField()
+
+
 class PurchaseOrderItemReadSerializer(serializers.ModelSerializer):
+    product = ProductMinimalSerializer(read_only=True)
+
     class Meta:
         model = PurchaseOrderItem
         fields = ["id", "product", "quantity", "unit_cost"]
 
 
 class CreatedBySerializer(serializers.Serializer):
-    id = serializers.UUIDField()
+    id = serializers.IntegerField()
     email = serializers.EmailField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
@@ -50,6 +59,12 @@ class CreatedBySerializer(serializers.Serializer):
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     items = PurchaseOrderItemReadSerializer(many=True, read_only=True)
     created_by = CreatedBySerializer(read_only=True)
+    supplier = serializers.SerializerMethodField()
+
+    def get_supplier(self, obj):
+        if obj.supplier:
+            return {"id": str(obj.supplier.id), "name": obj.supplier.name}
+        return None
 
     class Meta:
         model = PurchaseOrder

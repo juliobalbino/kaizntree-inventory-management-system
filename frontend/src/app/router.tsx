@@ -11,6 +11,9 @@ import { ProductsPage } from '../features/products/pages/ProductsPage';
 import { ProductDetailPage } from '../features/products/pages/ProductDetailPage';
 import { SuppliersPage } from '../features/suppliers/pages/SuppliersPage';
 import { CustomersPage } from '../features/customers/pages/CustomersPage';
+import { PurchasesPage } from '../features/purchases/pages/PurchasesPage';
+import { CreatePurchasePage } from '../features/purchases/pages/CreatePurchasePage';
+import { PurchaseOrderDetailPage } from '../features/purchases/pages/PurchaseOrderDetailPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -39,8 +42,9 @@ export const router = createBrowserRouter([
           { path: 'products/:id', element: <ProductDetailPage /> },
           { path: 'suppliers', element: <SuppliersPage /> },
           { path: 'customers', element: <CustomersPage /> },
-          { path: 'purchases', element: <Placeholder title="Purchases" /> },
-          { path: 'purchases/new', element: <Placeholder title="New Purchase Order" /> },
+          { path: 'purchases', element: <PurchasesPage /> },
+          { path: 'purchases/new', element: <CreatePurchasePage /> },
+          { path: 'purchases/:id', element: <PurchaseOrderDetailPage /> },
           { path: 'sales', element: <Placeholder title="Sales" /> },
           { path: 'sales/new', element: <Placeholder title="New Sales Order" /> },
 

@@ -27,10 +27,21 @@ class StockListCreateView(ListCreateAPIView):
     def get_queryset(self):
         org = self.request.user.organization
         product_id = self.request.query_params.get("product")
+        date_after = self.request.query_params.get("date_after")
+        date_before = self.request.query_params.get("date_before")
+
         if product_id:
             product = get_product_by_id(org, product_id)
-            return get_stock_for_product(product)
-        return Stock.objects.filter(product__org=org).order_by("-created_at")
+            qs = get_stock_for_product(product)
+        else:
+            qs = Stock.objects.filter(product__org=org).order_by("-created_at")
+
+        if date_after:
+            qs = qs.filter(created_at__date__gte=date_after)
+        if date_before:
+            qs = qs.filter(created_at__date__lte=date_before)
+
+        return qs
 
     def create(self, request, *args, **kwargs):
         serializer = StockCreateSerializer(data=request.data, context={"request": request})

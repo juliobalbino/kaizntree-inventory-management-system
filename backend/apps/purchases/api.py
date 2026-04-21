@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from .selectors import get_order_by_id, get_orders_for_org
 from .serializers import PurchaseOrderSerializer, PurchaseOrderWriteSerializer
-from .services import confirm_purchase_order, create_purchase_order
+from .services import cancel_purchase_order, confirm_purchase_order, create_purchase_order
 
 
 class PurchaseOrderListCreateView(ListCreateAPIView):
@@ -39,4 +39,11 @@ class ConfirmPurchaseOrderView(APIView):
     def post(self, request, pk):
         order = get_order_by_id(request.user.organization, pk)
         updated = confirm_purchase_order(order)
+        return Response(PurchaseOrderSerializer(updated).data)
+
+
+class CancelPurchaseOrderView(APIView):
+    def post(self, request, pk):
+        order = get_order_by_id(request.user.organization, pk)
+        updated = cancel_purchase_order(order)
         return Response(PurchaseOrderSerializer(updated).data)

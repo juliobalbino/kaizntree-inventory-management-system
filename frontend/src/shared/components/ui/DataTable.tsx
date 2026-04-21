@@ -31,7 +31,7 @@ interface DataTableProps<T> {
   pageSize?: number;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
-  onSearch: (query: string) => void;
+  onSearch?: (query: string) => void;
   searchPlaceholder?: string;
   sortField?: string;
   sortDirection?: 'asc' | 'desc';
@@ -40,6 +40,8 @@ interface DataTableProps<T> {
   totalPages: number;
   /** Extra content rendered on the right side of the search bar (e.g. filters) */
   rightToolbar?: React.ReactNode;
+  /** Hide the search input (toolbar section still shown if rightToolbar is provided) */
+  hideSearch?: boolean;
   /** Called when a row is clicked */
   onRowClick?: (item: T) => void;
 }
@@ -61,6 +63,7 @@ export function DataTable<T extends { id: string | number }>({
   emptyStateMessage = 'No records found.',
   totalPages,
   rightToolbar,
+  hideSearch = false,
   onRowClick,
 }: DataTableProps<T>) {
   const [searchValue, setSearchValue] = useState('');
@@ -72,7 +75,7 @@ export function DataTable<T extends { id: string | number }>({
   }, [onSearch]);
 
   useEffect(() => {
-    onSearchRef.current(debouncedSearch);
+    onSearchRef.current?.(debouncedSearch);
   }, [debouncedSearch]);
 
   const handleSort = (field: string) => {
@@ -108,18 +111,22 @@ export function DataTable<T extends { id: string | number }>({
 
   return (
     <Card shadow="sm" padding="md" radius="md" withBorder>
-      <Card.Section withBorder inheritPadding py="xs">
-        <Group justify="space-between">
-          <TextInput
-            placeholder={searchPlaceholder}
-            leftSection={<IconSearch size={16} />}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.currentTarget.value)}
-            style={{ width: 280 }}
-          />
-          {rightToolbar && <Group gap="sm">{rightToolbar}</Group>}
-        </Group>
-      </Card.Section>
+      {(!hideSearch || rightToolbar) && (
+        <Card.Section withBorder inheritPadding py="xs">
+          <Group justify="space-between">
+            {!hideSearch && (
+              <TextInput
+                placeholder={searchPlaceholder}
+                leftSection={<IconSearch size={16} />}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.currentTarget.value)}
+                style={{ width: 280 }}
+              />
+            )}
+            {rightToolbar && <Group gap="sm">{rightToolbar}</Group>}
+          </Group>
+        </Card.Section>
+      )}
 
       <Card.Section>
         {isLoading ? (

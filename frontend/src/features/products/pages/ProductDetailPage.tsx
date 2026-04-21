@@ -75,14 +75,16 @@ export function ProductDetailPage() {
   // Stock History table state
   const [stockPage, setStockPage] = useState(1);
   const [stockPageSize, setStockPageSize] = useState(20);
-  const [stockSearch, setStockSearch] = useState('');
+  const [dateAfter, setDateAfter] = useState('');
+  const [dateBefore, setDateBefore] = useState('');
   const [stockSortField, setStockSortField] = useState('created_at');
   const [stockSortDirection, setStockSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const { data: stockData, isLoading: isLoadingStock } = useStockForProduct(id, {
     page: stockPage,
     page_size: stockPageSize,
-    search: stockSearch || undefined,
+    date_after: dateAfter || undefined,
+    date_before: dateBefore || undefined,
     ordering: stockSortDirection === 'desc' ? `-${stockSortField}` : stockSortField,
   });
 
@@ -170,6 +172,22 @@ export function ProductDetailPage() {
           {SOURCE_LABELS[entry.source] ?? entry.source}
         </Badge>
       ),
+    },
+    {
+      key: 'reference',
+      header: 'Reference',
+      render: (entry) => {
+        if (!entry.reference) return <Text size="sm" c="dimmed">—</Text>;
+        const short = `#${entry.reference.toString().slice(0, 8).toUpperCase()}`;
+        if (entry.source === 'purchase_order') {
+          return (
+            <Anchor size="sm" ff="monospace" onClick={() => navigate(`/purchases/${entry.reference}`)}>
+              {short}
+            </Anchor>
+          );
+        }
+        return <Text size="sm" ff="monospace" c="dimmed">{short}</Text>;
+      },
     },
     {
       key: 'quantity',
@@ -362,12 +380,31 @@ export function ProductDetailPage() {
           totalPages={Math.ceil((stockData?.count ?? 0) / stockPageSize)}
           onPageChange={setStockPage}
           onPageSizeChange={(size) => { setStockPageSize(size); setStockPage(1); }}
-          onSearch={(s) => { setStockSearch(s); setStockPage(1); }}
+          hideSearch
+          rightToolbar={
+            <>
+              <TextInput
+                type="date"
+                label="From"
+                size="sm"
+                value={dateAfter}
+                onChange={(e) => { setDateAfter(e.currentTarget.value); setStockPage(1); }}
+                style={{ width: 160 }}
+              />
+              <TextInput
+                type="date"
+                label="To"
+                size="sm"
+                value={dateBefore}
+                onChange={(e) => { setDateBefore(e.currentTarget.value); setStockPage(1); }}
+                style={{ width: 160 }}
+              />
+            </>
+          }
           sortField={stockSortField}
           sortDirection={stockSortDirection}
           onSortChange={(field, dir) => { setStockSortField(field); setStockSortDirection(dir); }}
           emptyStateMessage="No stock entries yet."
-          searchPlaceholder="Search entries..."
         />
       </Stack>
 

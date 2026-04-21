@@ -7,6 +7,8 @@ export interface StockQueryParams {
   page_size?: number;
   search?: string;
   ordering?: string;
+  date_after?: string;
+  date_before?: string;
 }
 
 export const fetchStockForProduct = (productId: string, params?: Omit<StockQueryParams, 'product'>): Promise<PaginatedResponse<StockEntry>> =>
