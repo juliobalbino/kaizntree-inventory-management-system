@@ -9,6 +9,7 @@ import { MembersPage } from '../features/members/pages/MembersPage';
 import { OrganizationSettingsPage } from '../features/organizations/pages/OrganizationSettingsPage';
 import { ProductsPage } from '../features/products/pages/ProductsPage';
 import { ProductDetailPage } from '../features/products/pages/ProductDetailPage';
+import { SuppliersPage } from '../features/suppliers/pages/SuppliersPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -35,7 +36,7 @@ export const router = createBrowserRouter([
           { path: 'dashboard', element: <Placeholder title="Dashboard" /> },
           { path: 'products', element: <ProductsPage /> },
           { path: 'products/:id', element: <ProductDetailPage /> },
-          { path: 'suppliers', element: <Placeholder title="Suppliers" /> },
+          { path: 'suppliers', element: <SuppliersPage /> },
           { path: 'customers', element: <Placeholder title="Customers" /> },
           { path: 'purchases', element: <Placeholder title="Purchases" /> },
           { path: 'purchases/new', element: <Placeholder title="New Purchase Order" /> },

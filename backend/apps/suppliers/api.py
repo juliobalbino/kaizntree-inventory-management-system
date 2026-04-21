@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
@@ -9,6 +10,10 @@ from .services import create_supplier, delete_supplier, update_supplier
 
 class SupplierListCreateView(ListCreateAPIView):
     serializer_class = SupplierSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name", "email", "phone"]
+    ordering_fields = ["name", "created_at"]
+    ordering = ["name"]
 
     def get_queryset(self):
         return get_suppliers_for_org(self.request.user.organization)
