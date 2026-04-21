@@ -15,13 +15,13 @@ class SalesOrderListCreateView(ListCreateAPIView):
         return SalesOrderSerializer
 
     def get_queryset(self):
-        return get_orders_for_org(self.request.user.current_organization)
+        return get_orders_for_org(self.request.user.organization)
 
     def create(self, request, *args, **kwargs):
         serializer = SalesOrderWriteSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         order = create_sales_order(
-            org=request.user.current_organization,
+            org=request.user.organization,
             data=serializer.validated_data,
             user=request.user,
         )
@@ -32,11 +32,11 @@ class SalesOrderDetailView(RetrieveAPIView):
     serializer_class = SalesOrderSerializer
 
     def get_object(self):
-        return get_order_by_id(self.request.user.current_organization, self.kwargs["pk"])
+        return get_order_by_id(self.request.user.organization, self.kwargs["pk"])
 
 
 class ConfirmSalesOrderView(APIView):
     def post(self, request, pk):
-        order = get_order_by_id(request.user.current_organization, pk)
+        order = get_order_by_id(request.user.organization, pk)
         updated = confirm_sales_order(order)
         return Response(SalesOrderSerializer(updated).data)

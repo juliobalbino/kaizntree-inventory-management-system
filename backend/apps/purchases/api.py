@@ -15,13 +15,13 @@ class PurchaseOrderListCreateView(ListCreateAPIView):
         return PurchaseOrderSerializer
 
     def get_queryset(self):
-        return get_orders_for_org(self.request.user.current_organization)
+        return get_orders_for_org(self.request.user.organization)
 
     def create(self, request, *args, **kwargs):
         serializer = PurchaseOrderWriteSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         order = create_purchase_order(
-            org=request.user.current_organization,
+            org=request.user.organization,
             data=serializer.validated_data,
             user=request.user,
         )
@@ -32,11 +32,11 @@ class PurchaseOrderDetailView(RetrieveAPIView):
     serializer_class = PurchaseOrderSerializer
 
     def get_object(self):
-        return get_order_by_id(self.request.user.current_organization, self.kwargs["pk"])
+        return get_order_by_id(self.request.user.organization, self.kwargs["pk"])
 
 
 class ConfirmPurchaseOrderView(APIView):
     def post(self, request, pk):
-        order = get_order_by_id(request.user.current_organization, pk)
+        order = get_order_by_id(request.user.organization, pk)
         updated = confirm_purchase_order(order)
         return Response(PurchaseOrderSerializer(updated).data)

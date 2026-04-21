@@ -1,7 +1,5 @@
 from rest_framework.permissions import BasePermission
 
-from apps.organizations.models import OrganizationMembership
-
 
 class HasActiveOrganization(BasePermission):
     message = "No active organization. Create or join an organization first."
@@ -10,7 +8,7 @@ class HasActiveOrganization(BasePermission):
         return bool(
             request.user
             and request.user.is_authenticated
-            and request.user.current_organization_id is not None
+            and request.user.organization_id is not None
         )
 
 
@@ -23,9 +21,10 @@ class IsOrganizationOwner(BasePermission):
         org_id = view.kwargs.get("pk") or view.kwargs.get("org_pk")
         if not org_id:
             return False
-        return OrganizationMembership.objects.filter(
-            user=request.user, organization_id=org_id, role="owner"
-        ).exists()
+        return (
+            str(request.user.organization_id) == str(org_id)
+            and request.user.role == "owner"
+        )
 
 
 class IsAdmin(BasePermission):

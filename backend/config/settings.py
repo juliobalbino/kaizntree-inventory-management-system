@@ -109,6 +109,10 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+SIMPLE_JWT = {
+    "UPDATE_LAST_LOGIN": True,
+}
+
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
     default="http://localhost:5173",

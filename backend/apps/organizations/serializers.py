@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.users.models import User
 
-from .models import Organization, OrganizationMembership
+from .models import Organization
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -17,14 +17,8 @@ class CreateOrganizationSerializer(serializers.Serializer):
 
 
 class MemberSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(source="user.id", read_only=True)
-    email = serializers.EmailField(source="user.email", read_only=True)
-    first_name = serializers.CharField(source="user.first_name", read_only=True)
-    last_name = serializers.CharField(source="user.last_name", read_only=True)
-    role = serializers.CharField(read_only=True)
-
     class Meta:
-        model = OrganizationMembership
+        model = User
         fields = ["id", "email", "first_name", "last_name", "role"]
 
 
@@ -59,14 +53,14 @@ class AdminOrganizationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "slug", "created_at"]
 
     def get_members(self, obj):
-        memberships = obj.memberships.select_related("user").all()
+        users = obj.users.all()
         return [
             {
-                "id": str(m.user.id),
-                "email": m.user.email,
-                "first_name": m.user.first_name,
-                "last_name": m.user.last_name,
-                "role": m.role,
+                "id": str(u.id),
+                "email": u.email,
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+                "role": u.role,
             }
-            for m in memberships
+            for u in users
         ]

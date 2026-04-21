@@ -11,12 +11,12 @@ class SupplierListCreateView(ListCreateAPIView):
     serializer_class = SupplierSerializer
 
     def get_queryset(self):
-        return get_suppliers_for_org(self.request.user.current_organization)
+        return get_suppliers_for_org(self.request.user.organization)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        supplier = create_supplier(org=request.user.current_organization, data=serializer.validated_data)
+        supplier = create_supplier(org=request.user.organization, data=serializer.validated_data)
         return Response(SupplierSerializer(supplier).data, status=status.HTTP_201_CREATED)
 
 
@@ -25,7 +25,7 @@ class SupplierDetailView(RetrieveUpdateDestroyAPIView):
     http_method_names = ["get", "patch", "delete"]
 
     def get_object(self):
-        return get_supplier_by_id(self.request.user.current_organization, self.kwargs["pk"])
+        return get_supplier_by_id(self.request.user.organization, self.kwargs["pk"])
 
     def update(self, request, *args, **kwargs):
         supplier = self.get_object()

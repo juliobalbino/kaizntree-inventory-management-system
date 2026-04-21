@@ -154,7 +154,7 @@ export function Navbar({ close }: { close: () => void }) {
             {user?.first_name} {user?.last_name}
           </Text>
           <Text size="xs" c="dimmed" truncate>
-            {user?.current_organization?.name ?? 'No organization'}
+            {user?.organization?.name ?? 'No organization'}
           </Text>
         </Box>
         <ActionIcon variant="subtle" color="red" size="sm" onClick={logout} title="Log out">

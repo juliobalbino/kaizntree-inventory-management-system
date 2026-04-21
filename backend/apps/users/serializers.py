@@ -5,37 +5,31 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    current_organization = serializers.SerializerMethodField()
+    organization = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "is_admin", "current_organization", "role"]
+        fields = ["id", "email", "first_name", "last_name", "is_admin", "organization", "role"]
 
-    def get_current_organization(self, obj):
-        if not obj.current_organization_id:
+    def get_organization(self, obj):
+        if not obj.organization_id:
             return None
         return {
-            "id": str(obj.current_organization.id),
-            "name": obj.current_organization.name,
-            "slug": obj.current_organization.slug,
+            "id": str(obj.organization.id),
+            "name": obj.organization.name,
+            "slug": obj.organization.slug,
         }
 
     def get_role(self, obj):
         if obj.is_admin:
             return "admin"
-        if not obj.current_organization_id:
-            return None
-        membership = obj.memberships.filter(organization=obj.current_organization).first()
-        if membership:
-            return membership.role
-        return None
+        return obj.role
 
 
 class UpdateProfileSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
-    organization_id = serializers.UUIDField(required=False)
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -82,11 +76,12 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "first_name", "last_name", "organizations"]
 
     def get_organizations(self, obj):
+        if not obj.organization_id:
+            return []
         return [
             {
-                "id": str(m.organization.id),
-                "name": m.organization.name,
-                "role": m.role,
+                "id": str(obj.organization.id),
+                "name": obj.organization.name,
+                "role": obj.role,
             }
-            for m in obj.memberships.select_related("organization").all()
         ]

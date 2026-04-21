@@ -22,6 +22,6 @@ export interface User {
   first_name: string;
   last_name: string;
   is_admin: boolean;
-  current_organization: CurrentOrganization | null;
+  organization: CurrentOrganization | null;
   role: UserRole | null;
 }

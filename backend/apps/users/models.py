@@ -22,12 +22,18 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
     is_admin = models.BooleanField(default=False)
-    current_organization = models.ForeignKey(
+    organization = models.ForeignKey(
         "organizations.Organization",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="active_users",
+        related_name="users",
+    )
+    role = models.CharField(
+        max_length=10,
+        choices=[("owner", "Owner"), ("member", "Member")],
+        null=True,
+        blank=True
     )
 
     USERNAME_FIELD = "email"

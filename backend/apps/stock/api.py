@@ -18,7 +18,7 @@ class StockListCreateView(ListCreateAPIView):
         return StockSerializer
 
     def get_queryset(self):
-        org = self.request.user.current_organization
+        org = self.request.user.organization
         product_id = self.request.query_params.get("product")
         if product_id:
             product = get_product_by_id(org, product_id)
@@ -40,5 +40,5 @@ class StockDetailView(RetrieveAPIView):
 
     def get_object(self):
         return get_object_or_404(
-            Stock, id=self.kwargs["pk"], product__org=self.request.user.current_organization
+            Stock, id=self.kwargs["pk"], product__org=self.request.user.organization
         )

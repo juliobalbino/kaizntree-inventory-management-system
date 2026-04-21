@@ -30,10 +30,6 @@ class MeView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        if "organization_id" in data:
-            org = get_organization_by_id(request.user, data["organization_id"])
-            request.user.current_organization = org
-
         update_fields = []
         if "first_name" in data:
             request.user.first_name = data["first_name"]
@@ -41,8 +37,6 @@ class MeView(APIView):
         if "last_name" in data:
             request.user.last_name = data["last_name"]
             update_fields.append("last_name")
-        if "organization_id" in data:
-            update_fields.append("current_organization")
 
         if update_fields:
             request.user.save(update_fields=update_fields)

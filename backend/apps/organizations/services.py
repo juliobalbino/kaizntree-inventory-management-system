@@ -6,7 +6,7 @@ from django.utils.text import slugify
 from apps.users.models import User
 from common.exceptions import BusinessRuleViolation
 
-from .models import Organization, OrganizationMembership
+from .models import Organization
 
 
 def _generate_slug(name: str) -> str:
@@ -18,9 +18,9 @@ def create_organization(name: str, user) -> Organization:
     slug = _generate_slug(name)
     with transaction.atomic():
         org = Organization.objects.create(name=name, slug=slug)
-        OrganizationMembership.objects.create(user=user, organization=org, role="owner")
-        user.current_organization = org
-        user.save(update_fields=["current_organization"])
+        user.organization = org
+        user.role = "owner"
+        user.save(update_fields=["organization", "role"])
     return org
 
 
@@ -29,10 +29,10 @@ def create_organization_by_admin(name: str, owner_email: str) -> Organization:
     slug = _generate_slug(name)
     with transaction.atomic():
         org = Organization.objects.create(name=name, slug=slug)
-        OrganizationMembership.objects.create(user=owner, organization=org, role="owner")
-        if owner.current_organization_id is None:
-            owner.current_organization = org
-            owner.save(update_fields=["current_organization"])
+        if owner.organization_id is None:
+            owner.organization = org
+            owner.role = "owner"
+            owner.save(update_fields=["organization", "role"])
     return org
 
 
@@ -47,7 +47,7 @@ def delete_organization(org: Organization) -> None:
     org.delete()
 
 
-def add_member_to_organization(org: Organization, data: dict) -> OrganizationMembership:
+def add_member_to_organization(org: Organization, data: dict) -> User:
     email = data["email"]
     role = data.get("role", "member")
 
@@ -62,51 +62,46 @@ def add_member_to_organization(org: Organization, data: dict) -> OrganizationMem
         user.set_password(data["password"])
         user.save(update_fields=["password"])
 
-    if OrganizationMembership.objects.filter(user=user, organization=org).exists():
-        raise BusinessRuleViolation("User is already a member of this organization.")
+    if user.organization_id is not None:
+        if user.organization_id == org.id:
+            raise BusinessRuleViolation("User is already a member of this organization.")
+        else:
+            raise BusinessRuleViolation("User already belongs to another organization.")
 
     with transaction.atomic():
-        membership = OrganizationMembership.objects.create(
-            user=user, organization=org, role=role
-        )
-        if user.current_organization_id is None:
-            user.current_organization = org
-            user.save(update_fields=["current_organization"])
+        user.organization = org
+        user.role = role
+        user.save(update_fields=["organization", "role"])
 
-    return membership
+    return user
 
 
-def update_member_role(membership: OrganizationMembership, role: str) -> OrganizationMembership:
+def update_member_role(user: User, role: str) -> User:
     if (
-        membership.role == "owner"
+        user.role == "owner"
         and role == "member"
-        and OrganizationMembership.objects.filter(
-            organization=membership.organization, role="owner"
+        and User.objects.filter(
+            organization=user.organization, role="owner"
         ).count()
         <= 1
     ):
         raise BusinessRuleViolation("Cannot remove the last owner of the organization.")
 
-    membership.role = role
-    membership.save(update_fields=["role", "updated_at"])
-    return membership
+    user.role = role
+    user.save(update_fields=["role", "updated_at"])
+    return user
 
 
-def remove_member(membership: OrganizationMembership) -> None:
+def remove_member(user: User) -> None:
     if (
-        membership.role == "owner"
-        and OrganizationMembership.objects.filter(
-            organization=membership.organization, role="owner"
+        user.role == "owner"
+        and User.objects.filter(
+            organization=user.organization, role="owner"
         ).count()
         <= 1
     ):
         raise BusinessRuleViolation("Cannot remove the last owner of the organization.")
 
-    user = membership.user
-    org = membership.organization
-    membership.delete()
-
-    if user.current_organization_id == org.id:
-        next_org = Organization.objects.filter(memberships__user=user).first()
-        user.current_organization = next_org
-        user.save(update_fields=["current_organization"])
+    user.organization = None
+    user.role = None
+    user.save(update_fields=["organization", "role", "updated_at"])
