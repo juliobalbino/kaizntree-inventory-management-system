@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
           const { access } = response.data;
           localStorage.setItem('access_token', access);
           return apiClient(originalRequest);
-        } catch (refreshError) {
+        } catch {
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           window.location.href = '/login';

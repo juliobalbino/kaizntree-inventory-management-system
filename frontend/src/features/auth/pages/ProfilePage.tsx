@@ -36,6 +36,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (user) profileForm.setValues({ first_name: user.first_name, last_name: user.last_name });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const handleProfileSubmit = profileForm.onSubmit((values) => {

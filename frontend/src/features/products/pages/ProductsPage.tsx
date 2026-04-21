@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   Button,
-  Card,
-  Center,
   Group,
   Modal,
   NumberInput,
@@ -44,7 +42,7 @@ const createSchema = z.object({
 
 type CreateValues = z.infer<typeof createSchema>;
 
-const PAGE_SIZE = 20;
+
 
 function StockBadge({ qty }: { qty: number }) {
   if (qty <= 0) return <Badge color="red" variant="light" size="sm">Out of stock</Badge>;

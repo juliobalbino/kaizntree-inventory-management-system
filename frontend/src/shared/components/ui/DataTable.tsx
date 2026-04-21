@@ -84,7 +84,16 @@ export function DataTable<T extends { id: string | number }>({
     }
   };
 
-  const Th = ({ children, reversed, sorted, onSort, sortable, align }: any) => {
+  interface ThProps {
+    children: React.ReactNode;
+    reversed: boolean;
+    sorted: boolean;
+    onSort: () => void;
+    sortable?: boolean;
+    align?: 'left' | 'right' | 'center';
+  }
+
+  const Th = ({ children, reversed, sorted, onSort, sortable, align }: ThProps) => {
     const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
     return (
       <Table.Th style={{ textAlign: align ?? 'left' }}>
@@ -159,7 +168,7 @@ export function DataTable<T extends { id: string | number }>({
                 >
                   {columns.map((col) => (
                     <Table.Td key={`${item.id}-${col.key}`} style={{ textAlign: col.align ?? 'left' }}>
-                      {col.render ? col.render(item) : (item as any)[col.key]}
+                      {col.render ? col.render(item) : (item as Record<string, unknown>)[col.key] as React.ReactNode}
                     </Table.Td>
                   ))}
                 </Table.Tr>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -15,7 +16,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { zodResolver } from 'mantine-form-zod-resolver';
+import { zodResolver } from '../../../lib/zod-resolver';
 import { z } from 'zod';
 import { IconPlus, IconTrash, IconCheck } from '@tabler/icons-react';
 import { useCreatePurchaseOrder, useConfirmPurchaseOrder } from '../hooks/usePurchases';
@@ -26,7 +27,7 @@ import type { PurchaseOrder } from '../model/types';
 import { PurchaseOrderSummary } from '../components/PurchaseOrderSummary';
 
 const purchaseSchema = z.object({
-  supplier: z.string().nullable(),
+  supplier: z.string().nullable().refine((val) => !!val, 'Please select a supplier'),
   notes: z.string(),
   items: z.array(z.object({
     product: z.string().min(1, 'Required'),
@@ -144,7 +145,7 @@ export function CreatePurchasePage() {
             <Divider />
             <Select
               label="Supplier"
-              placeholder="Select a supplier (optional)"
+              placeholder="Select a supplier"
               data={supplierOptions}
               searchable
               clearable

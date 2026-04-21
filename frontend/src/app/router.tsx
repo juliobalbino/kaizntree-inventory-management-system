@@ -17,13 +17,9 @@ import { PurchaseOrderDetailPage } from '../features/purchases/pages/PurchaseOrd
 import { SalesPage } from '../features/sales/pages/SalesPage';
 import { CreateSalePage } from '../features/sales/pages/CreateSalePage';
 import { SalesOrderDetailPage } from '../features/sales/pages/SalesOrderDetailPage';
+import { Placeholder } from '../shared/components/ui/Placeholder';
 
-const Placeholder = ({ title }: { title: string }) => (
-  <div>
-    <h1>{title}</h1>
-    <p>Página em construção...</p>
-  </div>
-);
+
 
 export const router = createBrowserRouter([
   {

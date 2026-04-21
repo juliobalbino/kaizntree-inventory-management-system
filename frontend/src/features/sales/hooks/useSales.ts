@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -48,9 +49,9 @@ export function useConfirmSalesOrder() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       notifications.show({ title: 'Order confirmed', message: 'Stock has been deducted.', color: 'green' });
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.detail ?? 'Could not confirm order.';
-      notifications.show({ title: 'Insufficient stock', message: msg, color: 'red' });
+    onError: (error: unknown) => {
+      const msg = isAxiosError(error) ? error.response?.data?.detail : 'Could not confirm order.';
+      notifications.show({ title: 'Insufficient stock', message: msg ?? 'Could not confirm order.', color: 'red' });
     },
   });
 }

@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -27,6 +28,7 @@ import { useStockForProduct, useCreateStock, useRemoveStock } from '../../stock/
 import { useProductFinancials } from '../../financial/hooks/useFinancial';
 import { formatCurrency, formatDate } from '../../../lib/utils';
 import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
+import type { ProductPayload, ProductUnit } from '../model/types';
 import type { StockEntry } from '../../stock/model/types';
 
 const UNIT_OPTIONS = [
@@ -45,8 +47,6 @@ const editSchema = z.object({
   unit_cost: z.number().positive('Must be positive').nullable().optional(),
   unit_price: z.number().positive('Must be positive').nullable().optional(),
 });
-
-type EditValues = z.infer<typeof editSchema>;
 
 const SOURCE_COLORS: Record<string, string> = {
   manual: 'gray',
@@ -72,7 +72,6 @@ export function ProductDetailPage() {
   const updateProduct = useUpdateProduct(id!);
   const deleteProduct = useDeleteProduct();
 
-  // Stock History table state
   const [stockPage, setStockPage] = useState(1);
   const [stockPageSize, setStockPageSize] = useState(20);
   const [dateAfter, setDateAfter] = useState('');
@@ -92,8 +91,15 @@ export function ProductDetailPage() {
   const removeStock = useRemoveStock(id!);
   const { data: productFinancials } = useProductFinancials();
 
-  const form = useForm<EditValues>({
-    initialValues: { name: '', sku: '', unit: 'unit', description: '', unit_cost: null, unit_price: null },
+  const form = useForm({
+    initialValues: {
+      name: '',
+      sku: '',
+      unit: 'unit' as ProductUnit,
+      description: '',
+      unit_cost: null as number | null,
+      unit_price: null as number | null,
+    },
     validate: zodResolver(editSchema),
   });
 
@@ -118,10 +124,11 @@ export function ProductDetailPage() {
         unit_price: product.unit_price ? Number(product.unit_price) : null,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
 
   const handleSubmit = form.onSubmit((values) => {
-    updateProduct.mutate(values, { onSuccess: () => setEditing(false) });
+    updateProduct.mutate(values as ProductPayload, { onSuccess: () => setEditing(false) });
   });
 
   const handleDelete = () => {
@@ -145,9 +152,9 @@ export function ProductDetailPage() {
     }
     removeStock.mutate(values.quantity, {
       onSuccess: closeRemove,
-      onError: (error: any) => {
-        const msg = error?.response?.data?.detail ?? 'Could not remove stock.';
-        removeStockForm.setFieldError('quantity', msg);
+      onError: (error: unknown) => {
+        const msg = isAxiosError(error) ? error.response?.data?.detail : 'Could not remove stock.';
+        removeStockForm.setFieldError('quantity', msg ?? 'Could not remove stock.');
       },
     });
   });
@@ -205,7 +212,7 @@ export function ProductDetailPage() {
         const qty = Number(entry.quantity);
         return (
           <Text size="sm" fw={500} ff="monospace" c={qty >= 0 ? 'green' : 'red'}>
-            {qty > 0 ? '+' : ''}{qty} {product.unit}
+            {qty > 0 ? '+' : ''}{qty} {product?.unit}
           </Text>
         );
       },

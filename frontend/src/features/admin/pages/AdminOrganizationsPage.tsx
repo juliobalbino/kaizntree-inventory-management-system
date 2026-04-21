@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { useState } from 'react';
 import {
   Badge,
@@ -12,7 +13,6 @@ import {
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { PageHeader } from '../../../shared/components/ui/PageHeader';
-import { EmptyState } from '../../../shared/components/ui/EmptyState';
 import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
 import {
   useAdminOrgs,
@@ -86,9 +86,9 @@ export function AdminOrganizationsPage() {
         closeCreate();
         createForm.reset();
       },
-      onError: (error: any) => {
-        if (error.response?.data) {
-          createForm.setErrors(error.response.data);
+      onError: (error: unknown) => {
+        if (isAxiosError(error) && error.response?.data) {
+          createForm.setErrors(error.response.data as Record<string, React.ReactNode>);
         }
       },
     });
@@ -103,9 +103,9 @@ export function AdminOrganizationsPage() {
           setEditingOrg(null);
           editForm.reset();
         },
-        onError: (error: any) => {
-          if (error.response?.data) {
-            editForm.setErrors(error.response.data);
+        onError: (error: unknown) => {
+          if (isAxiosError(error) && error.response?.data) {
+            editForm.setErrors(error.response.data as Record<string, React.ReactNode>);
           }
         },
       }

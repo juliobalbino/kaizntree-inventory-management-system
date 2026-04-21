@@ -19,6 +19,7 @@ export function OrganizationSettingsPage() {
 
   useEffect(() => {
     if (org) form.setValues({ name: org.name });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [org?.id]);
 
   const handleSubmit = form.onSubmit((values) => {

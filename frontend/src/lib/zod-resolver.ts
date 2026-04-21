@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export function zodResolver(schema: z.ZodSchema<any>) {
-  return (values: any) => {
+export function zodResolver(schema: z.ZodSchema) {
+  return (values: unknown) => {
     try {
       schema.parse(values);
       return {};

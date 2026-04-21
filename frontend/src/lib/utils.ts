@@ -13,7 +13,7 @@ export function maskPhone(value: string): string {
   const matched = digits.match(/^(\d{0,2})(\d{0,5})(\d{0,4})$/);
   if (!matched) return digits;
 
-  const [_, area, main, rest] = matched;
+  const [, area, main, rest] = matched;
   let result = area;
   if (main) result += ` ${main}`;
   if (rest) result += `-${rest}`;

@@ -1,4 +1,4 @@
-import { Group, Text, Image } from '@mantine/core';
+import { Group, Image } from '@mantine/core';
 import logoUrl from '../../../assets/logo.png';
 
 export function Logo() {

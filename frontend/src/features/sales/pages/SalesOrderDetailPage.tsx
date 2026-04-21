@@ -43,7 +43,7 @@ export function SalesOrderDetailPage() {
                 loading={confirmOrder.isPending}
                 onClick={() => confirmOrder.mutate(order.id)}
               >
-                Confirm — Deduct Stock
+                Confirm
               </Button>
             </Group>
           )}

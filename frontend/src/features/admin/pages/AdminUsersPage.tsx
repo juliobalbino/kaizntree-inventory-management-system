@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { useState } from 'react';
 import {
   Button,
@@ -11,7 +12,6 @@ import {
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { PageHeader } from '../../../shared/components/ui/PageHeader';
-import { EmptyState } from '../../../shared/components/ui/EmptyState';
 import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
 import {
   useAdminUsers,
@@ -82,9 +82,9 @@ export function AdminUsersPage() {
         closeCreate();
         createForm.reset();
       },
-      onError: (error: any) => {
-        if (error.response?.data) {
-          createForm.setErrors(error.response.data);
+      onError: (error: unknown) => {
+        if (isAxiosError(error) && error.response?.data) {
+          createForm.setErrors(error.response.data as Record<string, React.ReactNode>);
         }
       },
     });
@@ -92,8 +92,10 @@ export function AdminUsersPage() {
 
   const handleEdit = editForm.onSubmit((values) => {
     if (!editingUser) return;
-    const payload = { ...values };
-    if (!payload.password) delete payload.password;
+    const { password, ...payload } = values;
+    if (password) {
+      (payload as Record<string, unknown>).password = password;
+    }
     updateUser.mutate(
       { id: editingUser.id, payload },
       {
@@ -101,9 +103,9 @@ export function AdminUsersPage() {
           setEditingUser(null);
           editForm.reset();
         },
-        onError: (error: any) => {
-          if (error.response?.data) {
-            editForm.setErrors(error.response.data);
+        onError: (error: unknown) => {
+          if (isAxiosError(error) && error.response?.data) {
+            editForm.setErrors(error.response.data as Record<string, React.ReactNode>);
           }
         },
       }

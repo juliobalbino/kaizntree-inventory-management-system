@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createStock, fetchStockForProduct, removeStock, type StockQueryParams } from '../api/stock.api';
@@ -35,9 +36,9 @@ export function useRemoveStock(productId: string) {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       notifications.show({ title: 'Stock removed', message: '', color: 'orange' });
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.detail ?? 'Could not remove stock.';
-      notifications.show({ title: 'Error', message: msg, color: 'red' });
+    onError: (error: unknown) => {
+      const msg = isAxiosError(error) ? error.response?.data?.detail : 'Could not remove stock.';
+      notifications.show({ title: 'Error', message: msg ?? 'Could not remove stock.', color: 'red' });
     },
   });
 }

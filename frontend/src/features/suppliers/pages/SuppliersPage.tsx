@@ -16,8 +16,8 @@ import { z } from 'zod';
 import { PageHeader } from '../../../shared/components/ui/PageHeader';
 import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
 import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '../hooks/useSuppliers';
-import { formatCurrency, formatDate, maskPhone, PHONE_REGEX } from '../../../lib/utils';
-import type { Supplier, SupplierPayload } from '../model/types';
+import { maskPhone, PHONE_REGEX } from '../../../lib/utils';
+import type { Supplier } from '../model/types';
 
 const supplierSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -50,7 +50,7 @@ export function SuppliersPage() {
   const updateSupplier = useUpdateSupplier(selectedSupplier?.id ?? '');
   const deleteSupplier = useDeleteSupplier();
 
-  const form = useForm<SupplierPayload>({
+  const form = useForm({
     initialValues: {
       name: '',
       email: '',

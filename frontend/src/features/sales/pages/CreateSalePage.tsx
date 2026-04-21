@@ -16,7 +16,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { zodResolver } from 'mantine-form-zod-resolver';
+import { zodResolver } from '../../../lib/zod-resolver';
 import { z } from 'zod';
 import { IconPlus, IconTrash, IconCheck } from '@tabler/icons-react';
 import { useCreateSalesOrder, useConfirmSalesOrder } from '../hooks/useSales';
@@ -27,7 +27,7 @@ import type { SalesOrder } from '../model/types';
 import { SalesOrderSummary } from '../components/SalesOrderSummary';
 
 const saleSchema = z.object({
-  customer: z.string().nullable(),
+  customer: z.string().nullable().refine((val) => !!val, 'Please select a customer'),
   notes: z.string(),
   items: z.array(z.object({
     product: z.string().min(1, 'Required'),
@@ -62,7 +62,7 @@ export function CreateSalePage() {
       const zodErrors = zodResolver(saleSchema)(values);
       
       // Then, add custom stock check
-      const errors: Record<string, any> = { ...zodErrors };
+      const errors: Record<string, React.ReactNode> = { ...(zodErrors as Record<string, React.ReactNode>) };
       
       values.items.forEach((item, index) => {
         if (item.product && item.quantity > 0) {
@@ -142,7 +142,7 @@ export function CreateSalePage() {
             Back to Orders
           </Button>
           <Button color="green" loading={confirmOrder.isPending} onClick={handleConfirm}>
-            Confirm Order — Deduct Stock
+            Confirm Order
           </Button>
         </Group>
       </Stack>
@@ -165,7 +165,7 @@ export function CreateSalePage() {
             <Divider />
             <Select
               label="Customer"
-              placeholder="Select a customer (optional)"
+              placeholder="Select a customer"
               data={customerOptions}
               searchable
               clearable

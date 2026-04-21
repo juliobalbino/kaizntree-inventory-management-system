@@ -16,8 +16,8 @@ import { z } from 'zod';
 import { PageHeader } from '../../../shared/components/ui/PageHeader';
 import { DataTable, type Column } from '../../../shared/components/ui/DataTable';
 import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from '../hooks/useCustomers';
-import { formatDate, maskPhone, PHONE_REGEX } from '../../../lib/utils';
-import type { Customer, CustomerPayload } from '../model/types';
+import { maskPhone, PHONE_REGEX } from '../../../lib/utils';
+import type { Customer } from '../model/types';
 
 const customerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -50,7 +50,7 @@ export function CustomersPage() {
   const updateCustomer = useUpdateCustomer(selectedCustomer?.id ?? '');
   const deleteCustomer = useDeleteCustomer();
 
-  const form = useForm<CustomerPayload>({
+  const form = useForm({
     initialValues: {
       name: '',
       email: '',
