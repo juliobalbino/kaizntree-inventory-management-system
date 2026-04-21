@@ -10,6 +10,7 @@ import { OrganizationSettingsPage } from '../features/organizations/pages/Organi
 import { ProductsPage } from '../features/products/pages/ProductsPage';
 import { ProductDetailPage } from '../features/products/pages/ProductDetailPage';
 import { SuppliersPage } from '../features/suppliers/pages/SuppliersPage';
+import { CustomersPage } from '../features/customers/pages/CustomersPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -37,7 +38,7 @@ export const router = createBrowserRouter([
           { path: 'products', element: <ProductsPage /> },
           { path: 'products/:id', element: <ProductDetailPage /> },
           { path: 'suppliers', element: <SuppliersPage /> },
-          { path: 'customers', element: <Placeholder title="Customers" /> },
+          { path: 'customers', element: <CustomersPage /> },
           { path: 'purchases', element: <Placeholder title="Purchases" /> },
           { path: 'purchases/new', element: <Placeholder title="New Purchase Order" /> },
           { path: 'sales', element: <Placeholder title="Sales" /> },
