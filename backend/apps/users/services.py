@@ -7,7 +7,10 @@ def create_user(email: str, password: str, first_name: str = "", last_name: str 
 
 def update_user(user: User, data: dict) -> User:
     for field, value in data.items():
-        setattr(user, field, value)
+        if field == "password":
+            user.set_password(value)
+        else:
+            setattr(user, field, value)
     user.save()
     return user
 

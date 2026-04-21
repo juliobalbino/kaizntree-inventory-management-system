@@ -12,5 +12,5 @@ urlpatterns = [
 
 admin_urlpatterns = [
     path("users/", AdminUserListCreateView.as_view(), name="admin-user-list-create"),
-    path("users/<uuid:pk>/", AdminUserDetailView.as_view(), name="admin-user-detail"),
+    path("users/<int:pk>/", AdminUserDetailView.as_view(), name="admin-user-detail"),
 ]

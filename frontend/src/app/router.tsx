@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { ProtectedRoute, RoleRoute } from '../components/layout/RouteGuards';
 import { LoginPage } from '../pages/login/LoginPage';
+import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
+import { AdminOrganizationsPage } from '../pages/admin/AdminOrganizationsPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -39,8 +41,8 @@ export const router = createBrowserRouter([
             path: 'admin',
             element: <RoleRoute allowedRoles={['admin']} />,
             children: [
-              { path: 'organizations', element: <Placeholder title="Admin: Organizations" /> },
-              { path: 'users', element: <Placeholder title="Admin: Users" /> },
+              { path: 'organizations', element: <AdminOrganizationsPage /> },
+              { path: 'users', element: <AdminUsersPage /> },
             ],
           },
 

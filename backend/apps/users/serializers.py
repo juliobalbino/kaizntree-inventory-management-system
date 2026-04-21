@@ -65,6 +65,7 @@ class AdminUpdateUserSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
     email = serializers.EmailField(required=False)
+    password = serializers.CharField(write_only=True, min_length=8, required=False)
 
     def validate_email(self, value):
         user = self.context.get("user_instance")
