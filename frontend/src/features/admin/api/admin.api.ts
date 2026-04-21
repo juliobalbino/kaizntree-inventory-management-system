@@ -1,4 +1,4 @@
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../../lib/api-client';
 import type {
   AdminUser,
   AdminOrganization,
@@ -6,7 +6,7 @@ import type {
   UpdateAdminUserPayload,
   CreateAdminOrgPayload,
   UpdateAdminOrgPayload,
-} from './types';
+} from '../model/types';
 
 export const fetchAdminUsers = (): Promise<AdminUser[]> =>
   apiClient.get('/admin/users/').then((r) => r.data);

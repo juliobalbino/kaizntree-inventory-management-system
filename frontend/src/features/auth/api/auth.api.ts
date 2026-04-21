@@ -1,5 +1,5 @@
-import { apiClient } from '../../lib/api-client';
-import type { AuthTokens, LoginPayload, User } from './types';
+import { apiClient } from '../../../lib/api-client';
+import type { AuthTokens, LoginPayload, User } from '../model/types';
 
 export async function login(payload: LoginPayload): Promise<AuthTokens> {
   const { data } = await apiClient.post<AuthTokens>('/auth/login/', payload);

@@ -9,13 +9,13 @@ import {
   createAdminOrg,
   updateAdminOrg,
   deleteAdminOrg,
-} from './api';
+} from '../api/admin.api';
 import type {
   CreateAdminUserPayload,
   UpdateAdminUserPayload,
   CreateAdminOrgPayload,
   UpdateAdminOrgPayload,
-} from './types';
+} from '../model/types';
 
 export function useAdminUsers() {
   return useQuery({

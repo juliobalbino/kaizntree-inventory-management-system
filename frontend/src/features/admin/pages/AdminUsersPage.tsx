@@ -11,15 +11,33 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { PageHeader } from '../../components/ui/PageHeader';
-import { EmptyState } from '../../components/ui/EmptyState';
+import { PageHeader } from '../../../shared/components/ui/PageHeader';
+import { EmptyState } from '../../../shared/components/ui/EmptyState';
 import {
   useAdminUsers,
   useCreateAdminUser,
   useUpdateAdminUser,
   useDeleteAdminUser,
-} from '../../features/admin/hooks';
-import type { AdminUser } from '../../features/admin/types';
+} from '../hooks/useAdmin';
+import type { AdminUser } from '../model/types';
+import { z } from 'zod';
+import { zodResolver } from '../../../lib/zod-resolver';
+
+const userSchema = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(8, 'Minimum 8 characters'),
+  first_name: z.string().min(1, 'Required'),
+  last_name: z.string().min(1, 'Required'),
+});
+
+const editUserSchema = z.object({
+  email: z.string().email('Invalid email'),
+  first_name: z.string().min(1, 'Required'),
+  last_name: z.string().min(1, 'Required'),
+  password: z.string().refine((val) => !val || val.length >= 8, {
+    message: 'Minimum 8 characters',
+  }).optional().or(z.literal('')),
+});
 
 export function AdminUsersPage() {
   const { data: users, isLoading } = useAdminUsers();
@@ -33,22 +51,12 @@ export function AdminUsersPage() {
 
   const createForm = useForm({
     initialValues: { email: '', password: '', first_name: '', last_name: '' },
-    validate: {
-      email: (v) => (/^\S+@\S+$/.test(v) ? null : 'Invalid email'),
-      password: (v) => (v.length >= 8 ? null : 'Minimum 8 characters'),
-      first_name: (v) => (v.trim() ? null : 'Required'),
-      last_name: (v) => (v.trim() ? null : 'Required'),
-    },
+    validate: zodResolver(userSchema),
   });
 
   const editForm = useForm({
     initialValues: { email: '', first_name: '', last_name: '', password: '' },
-    validate: {
-      email: (v) => (/^\S+@\S+$/.test(v) ? null : 'Invalid email'),
-      first_name: (v) => (v.trim() ? null : 'Required'),
-      last_name: (v) => (v.trim() ? null : 'Required'),
-      password: (v) => (!v || v.length >= 8 ? null : 'Minimum 8 characters'),
-    },
+    validate: zodResolver(editUserSchema),
   });
 
   const handleCreate = createForm.onSubmit((values) => {
@@ -56,6 +64,11 @@ export function AdminUsersPage() {
       onSuccess: () => {
         closeCreate();
         createForm.reset();
+      },
+      onError: (error: any) => {
+        if (error.response?.data) {
+          createForm.setErrors(error.response.data);
+        }
       },
     });
   });
@@ -70,6 +83,11 @@ export function AdminUsersPage() {
         onSuccess: () => {
           setEditingUser(null);
           editForm.reset();
+        },
+        onError: (error: any) => {
+          if (error.response?.data) {
+            editForm.setErrors(error.response.data);
+          }
         },
       }
     );

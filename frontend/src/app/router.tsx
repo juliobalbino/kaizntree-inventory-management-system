@@ -1,9 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { Layout } from '../components/layout/Layout';
-import { ProtectedRoute, RoleRoute } from '../components/layout/RouteGuards';
-import { LoginPage } from '../pages/login/LoginPage';
-import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
-import { AdminOrganizationsPage } from '../pages/admin/AdminOrganizationsPage';
+import { AppShell } from '../shared/components/layout/AppShell';
+import { ProtectedRoute, RoleRoute } from '../shared/components/layout/ProtectedRoute';
+import { LoginPage } from '../features/auth/pages/LoginPage';
+import { AdminUsersPage } from '../features/admin/pages/AdminUsersPage';
+import { AdminOrganizationsPage } from '../features/admin/pages/AdminOrganizationsPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '',
-        element: <Layout />,
+        element: <AppShell />,
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
 

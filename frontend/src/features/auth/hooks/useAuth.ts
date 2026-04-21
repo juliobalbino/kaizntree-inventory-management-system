@@ -1,8 +1,8 @@
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { changePassword, getCurrentUser, login, updateProfile } from './api';
-import type { LoginPayload } from './types';
+import { changePassword, getCurrentUser, login, updateProfile } from '../api/auth.api';
+import type { LoginPayload } from '../model/types';
 
 export function useCurrentUser() {
   const token = localStorage.getItem('access_token');

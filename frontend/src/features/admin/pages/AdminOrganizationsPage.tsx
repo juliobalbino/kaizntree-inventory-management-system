@@ -12,16 +12,27 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { PageHeader } from '../../components/ui/PageHeader';
-import { EmptyState } from '../../components/ui/EmptyState';
+import { PageHeader } from '../../../shared/components/ui/PageHeader';
+import { EmptyState } from '../../../shared/components/ui/EmptyState';
 import {
   useAdminOrgs,
   useCreateAdminOrg,
   useUpdateAdminOrg,
   useDeleteAdminOrg,
-} from '../../features/admin/hooks';
-import { useAdminUsers } from '../../features/admin/hooks';
-import type { AdminOrganization } from '../../features/admin/types';
+  useAdminUsers,
+} from '../hooks/useAdmin';
+import type { AdminOrganization } from '../model/types';
+import { z } from 'zod';
+import { zodResolver } from '../../../lib/zod-resolver';
+
+const orgSchema = z.object({
+  name: z.string().min(1, 'Required'),
+  owner_email: z.string().min(1, 'Owner is required'),
+});
+
+const editOrgSchema = z.object({
+  name: z.string().min(1, 'Required'),
+});
 
 export function AdminOrganizationsPage() {
   const { data: orgs, isLoading } = useAdminOrgs();
@@ -42,17 +53,12 @@ export function AdminOrganizationsPage() {
 
   const createForm = useForm({
     initialValues: { name: '', owner_email: '' },
-    validate: {
-      name: (v) => (v.trim() ? null : 'Required'),
-      owner_email: (v) => (v ? null : 'Owner is required'),
-    },
+    validate: zodResolver(orgSchema),
   });
 
   const editForm = useForm({
     initialValues: { name: '' },
-    validate: {
-      name: (v) => (v.trim() ? null : 'Required'),
-    },
+    validate: zodResolver(editOrgSchema),
   });
 
   const handleCreate = createForm.onSubmit((values) => {
@@ -60,6 +66,11 @@ export function AdminOrganizationsPage() {
       onSuccess: () => {
         closeCreate();
         createForm.reset();
+      },
+      onError: (error: any) => {
+        if (error.response?.data) {
+          createForm.setErrors(error.response.data);
+        }
       },
     });
   });
@@ -72,6 +83,11 @@ export function AdminOrganizationsPage() {
         onSuccess: () => {
           setEditingOrg(null);
           editForm.reset();
+        },
+        onError: (error: any) => {
+          if (error.response?.data) {
+            editForm.setErrors(error.response.data);
+          }
         },
       }
     );
