@@ -22,14 +22,14 @@ from .serializers import (
     CreateOrganizationSerializer,
     MemberSerializer,
     OrganizationSerializer,
-    UpdateMemberRoleSerializer,
+    UpdateMemberSerializer,
 )
 from .services import (
     add_member_to_organization,
     create_organization_by_admin,
     delete_organization,
     remove_member,
-    update_member_role,
+    update_member,
     update_organization,
 )
 
@@ -66,16 +66,20 @@ class OrganizationDetailView(APIView):
         return Response(OrganizationSerializer(updated).data)
 
 
-class MemberListCreateView(APIView):
+class MemberListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsOrganizationOwner]
+    serializer_class = MemberSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["email", "first_name", "last_name"]
+    ordering_fields = ["email", "first_name", "last_name", "role"]
+    ordering = ["email"]
 
-    def get(self, request, pk):
-        org = get_organization_by_id(request.user, pk)
-        members = get_members_for_organization(org)
-        return Response(MemberSerializer(members, many=True).data)
+    def get_queryset(self):
+        org = get_organization_by_id(self.request.user, self.kwargs["pk"])
+        return get_members_for_organization(org)
 
-    def post(self, request, pk):
-        org = get_organization_by_id(request.user, pk)
+    def create(self, request, *args, **kwargs):
+        org = get_organization_by_id(request.user, self.kwargs["pk"])
         serializer = AddMemberSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         membership = add_member_to_organization(org, serializer.validated_data)
@@ -93,9 +97,9 @@ class MemberDetailView(APIView):
     def patch(self, request, pk, user_id):
         org = get_organization_by_id(request.user, pk)
         membership = get_membership_by_user_id(org, user_id)
-        serializer = UpdateMemberRoleSerializer(data=request.data)
+        serializer = UpdateMemberSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        updated = update_member_role(membership, serializer.validated_data["role"])
+        updated = update_member(membership, serializer.validated_data)
         return Response(MemberSerializer(updated).data)
 
     def delete(self, request, pk, user_id):

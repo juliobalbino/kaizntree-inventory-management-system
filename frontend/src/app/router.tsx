@@ -2,8 +2,11 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '../shared/components/layout/AppShell';
 import { ProtectedRoute, RoleRoute } from '../shared/components/layout/ProtectedRoute';
 import { LoginPage } from '../features/auth/pages/LoginPage';
+import { ProfilePage } from '../features/auth/pages/ProfilePage';
 import { AdminUsersPage } from '../features/admin/pages/AdminUsersPage';
 import { AdminOrganizationsPage } from '../features/admin/pages/AdminOrganizationsPage';
+import { MembersPage } from '../features/members/pages/MembersPage';
+import { OrganizationSettingsPage } from '../features/organizations/pages/OrganizationSettingsPage';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div>
@@ -46,13 +49,13 @@ export const router = createBrowserRouter([
             ],
           },
 
-          { path: 'settings/profile', element: <Placeholder title="Profile" /> },
+          { path: 'settings/profile', element: <ProfilePage /> },
           {
             path: 'settings',
             element: <RoleRoute allowedRoles={['owner']} />,
             children: [
-              { path: 'members', element: <Placeholder title="Manage Members" /> },
-              { path: 'organization', element: <Placeholder title="Organization Settings" /> },
+              { path: 'members', element: <MembersPage /> },
+              { path: 'organization', element: <OrganizationSettingsPage /> },
             ],
           },
         ],

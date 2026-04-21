@@ -1,6 +1,7 @@
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { extractApiError } from '../../../lib/api-client';
 import { changePassword, getCurrentUser, login, updateProfile } from '../api/auth.api';
 import type { LoginPayload } from '../model/types';
 
@@ -70,8 +71,9 @@ export function useChangePassword() {
     onSuccess: () => {
       notifications.show({ title: 'Password changed', message: 'Your password has been updated.', color: 'green' });
     },
-    onError: () => {
-      notifications.show({ title: 'Error', message: 'Could not change password.', color: 'red' });
+    onError: (error) => {
+      const message = extractApiError(error) ?? 'Could not change password.';
+      notifications.show({ title: 'Error', message, color: 'red' });
     },
   });
 }

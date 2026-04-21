@@ -30,8 +30,11 @@ class AddMemberSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=["owner", "member"], default="member")
 
 
-class UpdateMemberRoleSerializer(serializers.Serializer):
-    role = serializers.ChoiceField(choices=["owner", "member"])
+class UpdateMemberSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=150, required=False)
+    last_name = serializers.CharField(max_length=150, required=False)
+    email = serializers.EmailField(required=False)
+    role = serializers.ChoiceField(choices=["owner", "member"], required=False)
 
 
 class AdminCreateOrganizationSerializer(serializers.Serializer):

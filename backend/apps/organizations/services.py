@@ -76,10 +76,12 @@ def add_member_to_organization(org: Organization, data: dict) -> User:
     return user
 
 
-def update_member_role(user: User, role: str) -> User:
+def update_member(user: User, data: dict) -> User:
+    new_role = data.get("role")
     if (
-        user.role == "owner"
-        and role == "member"
+        new_role is not None
+        and user.role == "owner"
+        and new_role == "member"
         and User.objects.filter(
             organization=user.organization, role="owner"
         ).count()
@@ -87,8 +89,9 @@ def update_member_role(user: User, role: str) -> User:
     ):
         raise BusinessRuleViolation("Cannot remove the last owner of the organization.")
 
-    user.role = role
-    user.save(update_fields=["role", "updated_at"])
+    for field, value in data.items():
+        setattr(user, field, value)
+    user.save()
     return user
 
 
@@ -104,4 +107,4 @@ def remove_member(user: User) -> None:
 
     user.organization = None
     user.role = None
-    user.save(update_fields=["organization", "role", "updated_at"])
+    user.save(update_fields=["organization", "role"])
