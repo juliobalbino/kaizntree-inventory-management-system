@@ -17,9 +17,7 @@ import { PurchaseOrderDetailPage } from '../features/purchases/pages/PurchaseOrd
 import { SalesPage } from '../features/sales/pages/SalesPage';
 import { CreateSalePage } from '../features/sales/pages/CreateSalePage';
 import { SalesOrderDetailPage } from '../features/sales/pages/SalesOrderDetailPage';
-import { Placeholder } from '../shared/components/ui/Placeholder';
-
-
+import { DashboardPage } from '../features/financial/pages/DashboardPage';
 
 export const router = createBrowserRouter([
   {
@@ -36,7 +34,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
 
-          { path: 'dashboard', element: <Placeholder title="Dashboard" /> },
+          { path: 'dashboard', element: <DashboardPage /> },
           { path: 'products', element: <ProductsPage /> },
           { path: 'products/:id', element: <ProductDetailPage /> },
           { path: 'suppliers', element: <SuppliersPage /> },
