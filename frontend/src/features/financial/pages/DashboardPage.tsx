@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Alert, Box, Button, Checkbox, Group, Modal,
+  Alert, Box, Button, Checkbox, Group, LoadingOverlay, Modal,
   Paper, SegmentedControl, SimpleGrid, Skeleton,
   Stack, Table, Text, TextInput,
 } from '@mantine/core';
@@ -218,7 +218,7 @@ function StatDetailModal({
 export function DashboardPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo]     = useState('');
-  const [groupBy, setGroupBy]   = useState<GroupBy>('month');
+  const [groupBy, setGroupBy]   = useState<GroupBy>('day');
   const [openModal, setOpenModal]     = useState<MetricKey | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -251,12 +251,22 @@ export function DashboardPage() {
 
   const hasFilters = !!dateFrom || !!dateTo || selectedIds.size > 0;
 
-  const timelineData = useMemo(() => (timeline ?? []).map((t) => ({
-    period:  t.period,
-    revenue: Number(t.revenue),
-    cost:    Number(t.cost),
-    profit:  Number(t.profit),
-  })), [timeline]);
+  const timelineData = useMemo(() => {
+    let accRevenue = 0;
+    let accCost = 0;
+    let accProfit = 0;
+    return (timeline ?? []).map((t) => {
+      accRevenue += Number(t.revenue);
+      accCost += Number(t.cost);
+      accProfit += Number(t.profit);
+      return {
+        period:  t.period,
+        revenue: accRevenue,
+        cost:    accCost,
+        profit:  accProfit,
+      };
+    });
+  }, [timeline]);
 
   const handleProductToggle = (productId: string, checked: boolean) => {
     const current = new Set(selectedIds);
@@ -299,6 +309,8 @@ export function DashboardPage() {
 
   return (
     <>
+    <Box pos="relative">
+      <LoadingOverlay visible={summaryLoading || productsLoading} overlayProps={{ blur: 2 }} />
       <PageHeader title="Dashboard" description="Financial overview of your organization." actions={filters} />
 
       {summaryError && (
@@ -457,6 +469,7 @@ export function DashboardPage() {
         onGroupByChange={setGroupBy}
         onClose={() => setOpenModal(null)}
       />
+    </Box>
     </>
   );
 }

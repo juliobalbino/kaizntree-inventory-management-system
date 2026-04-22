@@ -4,11 +4,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Anchor,
   Badge,
+  Box,
   Breadcrumbs,
   Button,
   Card,
   Divider,
   Group,
+  LoadingOverlay,
   Modal,
   NumberInput,
   Select,
@@ -44,8 +46,8 @@ const editSchema = z.object({
   sku: z.string().min(1, 'Required'),
   unit: z.enum(['kg', 'g', 'L', 'mL', 'unit'], { error: 'Required' }),
   description: z.string().optional(),
-  unit_cost: z.number().positive('Must be positive').nullable().optional(),
-  unit_price: z.number().positive('Must be positive').nullable().optional(),
+  unit_cost: z.number().min(0, 'Must be 0 or more').nullable().optional(),
+  unit_price: z.number().min(0, 'Must be 0 or more').nullable().optional(),
 });
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -89,7 +91,7 @@ export function ProductDetailPage() {
 
   const createStock = useCreateStock();
   const removeStock = useRemoveStock(id!);
-  const { data: productFinancials } = useProductFinancials();
+  const { data: productFinancials, isLoading: isLoadingFinancials } = useProductFinancials();
 
   const form = useForm({
     initialValues: {
@@ -224,6 +226,8 @@ export function ProductDetailPage() {
 
   return (
     <>
+    <Box pos="relative">
+      <LoadingOverlay visible={isLoadingFinancials} overlayProps={{ blur: 2 }} />
       <Stack gap="xs" mb="xl">
         <Breadcrumbs>
           <Anchor size="sm" onClick={() => navigate('/products')}>Products</Anchor>
@@ -471,6 +475,7 @@ export function ProductDetailPage() {
           </Stack>
         </form>
       </Modal>
+    </Box>
     </>
   );
 }

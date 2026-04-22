@@ -6,6 +6,7 @@ from django.db.models.functions import Coalesce, TruncDay, TruncMonth, TruncYear
 from apps.products.models import Product
 from apps.purchases.models import PurchaseOrderItem
 from apps.sales.models import SalesOrderItem
+from apps.stock.models import Stock
 
 from .services import calculate_profit_margin
 
@@ -14,24 +15,37 @@ _ZERO = Decimal("0")
 
 
 def _cost_subquery(date_from=None, date_to=None):
-    qs = PurchaseOrderItem.objects.filter(
+    po_qs = PurchaseOrderItem.objects.filter(
         product=OuterRef("pk"),
         order__status="confirmed",
     )
+    manual_qs = Stock.objects.filter(
+        product=OuterRef("pk"),
+        source="manual",
+        quantity__gt=0,
+    )
+
     if date_from:
-        qs = qs.filter(order__created_at__date__gte=date_from)
+        po_qs = po_qs.filter(order__created_at__date__gte=date_from)
+        manual_qs = manual_qs.filter(created_at__date__gte=date_from)
     if date_to:
-        qs = qs.filter(order__created_at__date__lte=date_to)
-    return Coalesce(
-        Subquery(
-            qs.values("product")
-            .annotate(total=Sum(ExpressionWrapper(F("unit_cost") * F("quantity"), output_field=_DECIMAL_FIELD)))
-            .values("total"),
-            output_field=_DECIMAL_FIELD,
-        ),
-        _ZERO,
+        po_qs = po_qs.filter(order__created_at__date__lte=date_to)
+        manual_qs = manual_qs.filter(created_at__date__lte=date_to)
+
+    po_total = Subquery(
+        po_qs.values("product")
+        .annotate(total=Sum(ExpressionWrapper(F("unit_cost") * F("quantity"), output_field=_DECIMAL_FIELD)))
+        .values("total"),
         output_field=_DECIMAL_FIELD,
     )
+    manual_total = Subquery(
+        manual_qs.values("product")
+        .annotate(total=Sum(ExpressionWrapper(F("quantity") * F("product__unit_cost"), output_field=_DECIMAL_FIELD)))
+        .values("total"),
+        output_field=_DECIMAL_FIELD,
+    )
+
+    return Coalesce(po_total, _ZERO, output_field=_DECIMAL_FIELD) + Coalesce(manual_total, _ZERO, output_field=_DECIMAL_FIELD)
 
 
 def _revenue_subquery(date_from=None, date_to=None):
@@ -79,27 +93,35 @@ def _units_sold_subquery(date_from=None, date_to=None):
 def get_financial_summary(org, date_from=None, date_to=None, product_ids=None) -> dict:
     cost_filters = {"order__org": org, "order__status": "confirmed"}
     revenue_filters = {"order__org": org, "order__status": "confirmed"}
+    manual_filters = {"product__org": org, "source": "manual", "quantity__gt": 0}
 
     if date_from:
         cost_filters["order__created_at__date__gte"] = date_from
         revenue_filters["order__created_at__date__gte"] = date_from
+        manual_filters["created_at__date__gte"] = date_from
     if date_to:
         cost_filters["order__created_at__date__lte"] = date_to
         revenue_filters["order__created_at__date__lte"] = date_to
+        manual_filters["created_at__date__lte"] = date_to
     if product_ids:
         cost_filters["product_id__in"] = product_ids
         revenue_filters["product_id__in"] = product_ids
+        manual_filters["product_id__in"] = product_ids
 
     cost_agg = (
         PurchaseOrderItem.objects.filter(**cost_filters)
         .aggregate(total=Sum(ExpressionWrapper(F("unit_cost") * F("quantity"), output_field=_DECIMAL_FIELD)))
+    )
+    manual_cost_agg = (
+        Stock.objects.filter(**manual_filters)
+        .aggregate(total=Sum(ExpressionWrapper(F("quantity") * F("product__unit_cost"), output_field=_DECIMAL_FIELD)))
     )
     revenue_agg = (
         SalesOrderItem.objects.filter(**revenue_filters)
         .aggregate(total=Sum(ExpressionWrapper(F("unit_price") * F("quantity"), output_field=_DECIMAL_FIELD)))
     )
 
-    total_cost = cost_agg["total"] or _ZERO
+    total_cost = (cost_agg["total"] or _ZERO) + (manual_cost_agg["total"] or _ZERO)
     total_revenue = revenue_agg["total"] or _ZERO
     profit = total_revenue - total_cost
 
@@ -152,16 +174,20 @@ def get_financial_timeline(org, group_by="month", date_from=None, date_to=None, 
 
     revenue_qs = SalesOrderItem.objects.filter(order__org=org, order__status="confirmed")
     cost_qs = PurchaseOrderItem.objects.filter(order__org=org, order__status="confirmed")
+    manual_qs = Stock.objects.filter(product__org=org, source="manual", quantity__gt=0)
 
     if date_from:
         revenue_qs = revenue_qs.filter(order__created_at__date__gte=date_from)
         cost_qs = cost_qs.filter(order__created_at__date__gte=date_from)
+        manual_qs = manual_qs.filter(created_at__date__gte=date_from)
     if date_to:
         revenue_qs = revenue_qs.filter(order__created_at__date__lte=date_to)
         cost_qs = cost_qs.filter(order__created_at__date__lte=date_to)
+        manual_qs = manual_qs.filter(created_at__date__lte=date_to)
     if product_ids:
         revenue_qs = revenue_qs.filter(product_id__in=product_ids)
         cost_qs = cost_qs.filter(product_id__in=product_ids)
+        manual_qs = manual_qs.filter(product_id__in=product_ids)
 
     revenue_by_period = (
         revenue_qs.annotate(period=trunc_fn("order__created_at"))
@@ -175,9 +201,20 @@ def get_financial_timeline(org, group_by="month", date_from=None, date_to=None, 
         .annotate(total=Sum(ExpressionWrapper(F("unit_cost") * F("quantity"), output_field=_DECIMAL_FIELD)))
         .order_by("period")
     )
+    manual_by_period = (
+        manual_qs.annotate(period=trunc_fn("created_at"))
+        .values("period")
+        .annotate(total=Sum(ExpressionWrapper(F("quantity") * F("product__unit_cost"), output_field=_DECIMAL_FIELD)))
+        .order_by("period")
+    )
 
     revenue_dict = {r["period"]: r["total"] or _ZERO for r in revenue_by_period}
     cost_dict = {c["period"]: c["total"] or _ZERO for c in cost_by_period}
+    manual_dict = {m["period"]: m["total"] or _ZERO for m in manual_by_period}
+
+    # Combine costs
+    for period, total in manual_dict.items():
+        cost_dict[period] = cost_dict.get(period, _ZERO) + total
 
     fmt = {"day": "%Y-%m-%d", "month": "%Y-%m", "year": "%Y"}.get(group_by, "%Y-%m")
     all_periods = sorted(set(revenue_dict) | set(cost_dict))

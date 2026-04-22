@@ -36,8 +36,8 @@ const createSchema = z.object({
   sku: z.string().min(1, 'Required'),
   unit: z.enum(['kg', 'g', 'L', 'mL', 'unit'], { error: 'Required' }),
   description: z.string().optional(),
-  unit_cost: z.number().positive('Must be positive').nullable().optional(),
-  unit_price: z.number().positive('Must be positive').nullable().optional(),
+  unit_cost: z.number().min(0, 'Must be 0 or more').nullable().optional(),
+  unit_price: z.number().min(0, 'Must be 0 or more').nullable().optional(),
 });
 
 type CreateValues = z.infer<typeof createSchema>;

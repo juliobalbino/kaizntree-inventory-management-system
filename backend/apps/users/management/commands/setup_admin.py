@@ -22,7 +22,7 @@ class Command(BaseCommand):
                 password=password,
                 first_name='Admin',
                 last_name='Initial',
-                is_admin=True  # Garantindo que o campo is_admin do seu modelo também seja True
+                is_admin=True
             )
             self.stdout.write(self.style.SUCCESS(f'Usuário {email} criado com sucesso!'))
         else:

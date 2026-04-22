@@ -18,6 +18,10 @@ python manage.py migrate
 echo "Setting up initial admin..."
 python manage.py setup_admin
 
+# Seed initial data
+echo "Seeding initial data..."
+python manage.py seed_data
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
