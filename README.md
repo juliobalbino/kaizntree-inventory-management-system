@@ -197,14 +197,10 @@ VITE_API_URL=http://localhost:8000/api/
 
 ### 2. Build and start
 
-```bash
-docker compose up --build
-```
-
-Or in detached mode:
+If you keep your `.env` files separated inside their respective folders (`backend/.env` and `frontend/.env`), you must pass both to Docker Compose so it can interpolate all necessary build variables:
 
 ```bash
-docker compose up --build -d
+docker compose --env-file ./backend/.env --env-file ./frontend/.env up -d --build
 ```
 
 The backend entrypoint automatically runs on startup:
