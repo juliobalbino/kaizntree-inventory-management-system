@@ -93,7 +93,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Kaizntree API",
+    "TITLE": "IM API",
     "DESCRIPTION": "Inventory management API for Food & Beverages CPG brands.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
@@ -124,4 +124,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "static_root"
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media_root"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
