@@ -1,9 +1,11 @@
-import { Box, Button, Container, Paper, PasswordInput, Stack, TextInput, Title, Text } from '@mantine/core';
+import { Box, Button, Container, Paper, PasswordInput, Stack, TextInput, Title, Text, Image } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { Navigate } from 'react-router-dom';
 import { useLogin, useCurrentUser } from '../hooks/useAuth';
 import { z } from 'zod';
 import { zodResolver } from '../../../lib/zod-resolver';
+import logo from '../../../assets/logo.png';
+
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -30,6 +32,7 @@ export function LoginPage() {
     <Box style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', background: 'var(--mantine-color-gray-0)' }}>
       <Container size={420} w="100%">
         <Stack align="center" mb="xl" gap={4}>
+          <Image src={logo} w={240} mb="md" alt="Kaizntree Logo" />
           <Title order={2}>Welcome back</Title>
           <Text c="dimmed" size="sm">Please enter your details to sign in</Text>
         </Stack>

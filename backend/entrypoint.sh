@@ -14,6 +14,10 @@ echo "Database started"
 echo "Applying database migrations..."
 python manage.py migrate
 
+# Setup initial admin
+echo "Setting up initial admin..."
+python manage.py setup_admin
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput

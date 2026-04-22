@@ -113,10 +113,13 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
-CORS_ALLOWED_ORIGINS = config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:5173",
-).split(",")
+CORS_ALLOWED_ORIGINS = [
+    origin.strip() for origin in config("CORS_ALLOWED_ORIGINS", default="").split(",") if origin.strip()
+]
+
+
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
