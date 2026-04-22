@@ -345,105 +345,107 @@ export function DashboardPage() {
           </Alert>
         )}
 
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th style={{ width: 40 }}>
-                <Checkbox
-                  size="xs"
-                  checked={allProducts.length > 0 && selectedIds.size === allProducts.length}
-                  indeterminate={selectedIds.size > 0 && selectedIds.size < allProducts.length}
-                  onChange={toggleAll}
-                />
-              </Table.Th>
-              <Table.Th>Product</Table.Th>
-              <Table.Th>SKU</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Units Sold</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Revenue</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Cost</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Profit</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Margin</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {productsLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <Table.Tr key={i}>
-                  {Array.from({ length: 7 }).map((__, j) => (
-                    <Table.Td key={j}><Skeleton height={14} /></Table.Td>
-                  ))}
-                </Table.Tr>
-              ))
-            ) : !products || products.length === 0 ? (
+        <Table.ScrollContainer minWidth={800}>
+          <Table striped highlightOnHover>
+            <Table.Thead>
               <Table.Tr>
-                <Table.Td colSpan={7}>
-                  <Stack align="center" py="xl" gap={4}>
-                    <Text c="dimmed" size="sm">No products found.</Text>
-                  </Stack>
-                </Table.Td>
+                <Table.Th style={{ width: 40 }}>
+                  <Checkbox
+                    size="xs"
+                    checked={allProducts.length > 0 && selectedIds.size === allProducts.length}
+                    indeterminate={selectedIds.size > 0 && selectedIds.size < allProducts.length}
+                    onChange={toggleAll}
+                  />
+                </Table.Th>
+                <Table.Th>Product</Table.Th>
+                <Table.Th>SKU</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>Units Sold</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>Revenue</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>Cost</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>Profit</Table.Th>
+                <Table.Th style={{ textAlign: 'right' }}>Margin</Table.Th>
               </Table.Tr>
-            ) : (
-              products.map((p) => {
-                const profitNum    = Number(p.profit);
-                const marginNum    = Number(p.margin);
-                const marginBarPct = Math.min(100, Math.max(0, marginNum));
-                const isSelected   = selectedIds.has(p.product_id);
-
-                return (
-                  <Table.Tr key={p.product_id} style={{ background: isSelected ? 'var(--mantine-color-blue-0)' : undefined }}>
-                    <Table.Td>
-                      <Checkbox
-                        size="xs"
-                        checked={isSelected}
-                        onChange={(e) => handleProductToggle(p.product_id, e.currentTarget.checked)}
-                      />
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" fw={500}>{p.product_name}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed" ff="monospace">{p.product_sku}</Text>
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: 'right' }}>
-                      <Text size="sm" ff="monospace">{Number(p.units_sold).toLocaleString()}</Text>
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: 'right' }}>
-                      <Text size="sm" ff="monospace" fw={500}>{formatCurrency(p.total_revenue)}</Text>
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: 'right' }}>
-                      <Text size="sm" ff="monospace" c="dimmed">{formatCurrency(p.total_cost)}</Text>
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: 'right' }}>
-                      <Text size="sm" ff="monospace" fw={500} c={profitNum >= 0 ? 'green' : 'red'}>
-                        {profitNum >= 0 ? '+' : ''}{formatCurrency(profitNum)}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: 'right' }}>
-                      <Group gap={8} justify="flex-end" wrap="nowrap">
-                        <Box
-                          visibleFrom="md"
-                          style={{
-                            width: 64, height: 6, borderRadius: 99,
-                            background: 'var(--mantine-color-default-border)',
-                            overflow: 'hidden', flexShrink: 0,
-                          }}
-                        >
-                          <Box
-                            style={{
-                              width: `${marginBarPct}%`, height: '100%',
-                              background: 'var(--mantine-color-green-6)', borderRadius: 99,
-                            }}
-                          />
-                        </Box>
-                        <Text size="sm" ff="monospace" fw={500}>{marginNum.toFixed(0)}%</Text>
-                      </Group>
-                    </Table.Td>
+            </Table.Thead>
+            <Table.Tbody>
+              {productsLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Table.Tr key={i}>
+                    {Array.from({ length: 8 }).map((__, j) => (
+                      <Table.Td key={j}><Skeleton height={14} /></Table.Td>
+                    ))}
                   </Table.Tr>
-                );
-              })
-            )}
-          </Table.Tbody>
-        </Table>
+                ))
+              ) : !products || products.length === 0 ? (
+                <Table.Tr>
+                  <Table.Td colSpan={8}>
+                    <Stack align="center" py="xl" gap={4}>
+                      <Text c="dimmed" size="sm">No products found.</Text>
+                    </Stack>
+                  </Table.Td>
+                </Table.Tr>
+              ) : (
+                products.map((p) => {
+                  const profitNum    = Number(p.profit);
+                  const marginNum    = Number(p.margin);
+                  const marginBarPct = Math.min(100, Math.max(0, marginNum));
+                  const isSelected   = selectedIds.has(p.product_id);
+
+                  return (
+                    <Table.Tr key={p.product_id} style={{ background: isSelected ? 'var(--mantine-color-blue-0)' : undefined }}>
+                      <Table.Td>
+                        <Checkbox
+                          size="xs"
+                          checked={isSelected}
+                          onChange={(e) => handleProductToggle(p.product_id, e.currentTarget.checked)}
+                        />
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm" fw={500}>{p.product_name}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm" c="dimmed" ff="monospace">{p.product_sku}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <Text size="sm" ff="monospace">{Number(p.units_sold).toLocaleString()}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <Text size="sm" ff="monospace" fw={500}>{formatCurrency(p.total_revenue)}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <Text size="sm" ff="monospace" c="dimmed">{formatCurrency(p.total_cost)}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <Text size="sm" ff="monospace" fw={500} c={profitNum >= 0 ? 'green' : 'red'}>
+                          {profitNum >= 0 ? '+' : ''}{formatCurrency(profitNum)}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <Group gap={8} justify="flex-end" wrap="nowrap">
+                          <Box
+                            visibleFrom="md"
+                            style={{
+                              width: 64, height: 6, borderRadius: 99,
+                              background: 'var(--mantine-color-default-border)',
+                              overflow: 'hidden', flexShrink: 0,
+                            }}
+                          >
+                            <Box
+                              style={{
+                                width: `${marginBarPct}%`, height: '100%',
+                                background: 'var(--mantine-color-green-6)', borderRadius: 99,
+                              }}
+                            />
+                          </Box>
+                          <Text size="sm" ff="monospace" fw={500}>{marginNum.toFixed(0)}%</Text>
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })
+              )}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       </Paper>
 
       <StatDetailModal

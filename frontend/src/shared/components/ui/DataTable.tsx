@@ -142,39 +142,41 @@ export function DataTable<T extends { id: string | number }>({
         ) : data.length === 0 ? (
           <EmptyState message={emptyStateMessage} />
         ) : (
-          <Table striped highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                {columns.map((col) => (
-                  <Th
-                    key={col.key}
-                    sorted={sortField === col.key}
-                    reversed={sortDirection === 'asc'}
-                    onSort={() => handleSort(col.key)}
-                    sortable={col.sortable}
-                    align={col.align}
-                  >
-                    {col.header}
-                  </Th>
-                ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {data.map((item) => (
-                <Table.Tr
-                  key={item.id}
-                  onClick={onRowClick ? () => onRowClick(item) : undefined}
-                  style={onRowClick ? { cursor: 'pointer' } : undefined}
-                >
+          <Table.ScrollContainer minWidth={800}>
+            <Table striped highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
                   {columns.map((col) => (
-                    <Table.Td key={`${item.id}-${col.key}`} style={{ textAlign: col.align ?? 'left' }}>
-                      {col.render ? col.render(item) : (item as Record<string, unknown>)[col.key] as React.ReactNode}
-                    </Table.Td>
+                    <Th
+                      key={col.key}
+                      sorted={sortField === col.key}
+                      reversed={sortDirection === 'asc'}
+                      onSort={() => handleSort(col.key)}
+                      sortable={col.sortable}
+                      align={col.align}
+                    >
+                      {col.header}
+                    </Th>
                   ))}
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {data.map((item) => (
+                  <Table.Tr
+                    key={item.id}
+                    onClick={onRowClick ? () => onRowClick(item) : undefined}
+                    style={onRowClick ? { cursor: 'pointer' } : undefined}
+                  >
+                    {columns.map((col) => (
+                      <Table.Td key={`${item.id}-${col.key}`} style={{ textAlign: col.align ?? 'left' }}>
+                        {col.render ? col.render(item) : (item as Record<string, unknown>)[col.key] as React.ReactNode}
+                      </Table.Td>
+                    ))}
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
         )}
       </Card.Section>
 
